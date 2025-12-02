@@ -21,6 +21,7 @@ FRAMEWORK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Parse arguments
 ANALYZE=false
+DEEP_ANALYZE=false
 PROJECT_NAME=""
 
 while [[ $# -gt 0 ]]; do
@@ -29,17 +30,24 @@ while [[ $# -gt 0 ]]; do
             ANALYZE=true
             shift
             ;;
+        --deep-analyze|-d)
+            ANALYZE=true
+            DEEP_ANALYZE=true
+            shift
+            ;;
         --help|-h)
             echo "Usage: ./setup.sh [options] [project-name]"
             echo ""
             echo "Options:"
-            echo "  --analyze, -a    Analyze existing codebase and auto-detect tech stack"
-            echo "  --help, -h       Show this help message"
+            echo "  --analyze, -a       Analyze existing codebase and auto-detect tech stack"
+            echo "  --deep-analyze, -d  Deep analysis: detect patterns, components, architecture"
+            echo "  --help, -h          Show this help message"
             echo ""
             echo "Examples:"
             echo "  ./setup.sh                    # New project in current directory"
             echo "  ./setup.sh my-app             # New project named 'my-app'"
             echo "  ./setup.sh --analyze          # Existing project, detect stack"
+            echo "  ./setup.sh --deep-analyze     # Existing project, full architecture scan"
             exit 0
             ;;
         *)
@@ -278,6 +286,98 @@ fi
 # Create ARTIFACTS directory structure
 echo "  Creating ARTIFACTS directories..."
 mkdir -p "$TARGET_DIR/ARTIFACTS"/{product-manager,system-architect,frontend-engineer,backend-engineer,ai-engineer,qa-engineer,devops-engineer,system}
+
+# ============================================================================
+# DEEP ANALYSIS (if --deep-analyze)
+# ============================================================================
+
+if [ "$DEEP_ANALYZE" = true ]; then
+    echo -e "${CYAN}Preparing deep architecture analysis...${NC}"
+    DEEP_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+    # Create pending architecture snapshot
+    cat > "$TARGET_DIR/ARTIFACTS/system/architecture-snapshot.json" << EOF
+{
+  "project_name": "$PROJECT_NAME",
+  "captured_at": "$DEEP_TIMESTAMP",
+  "status": "pending",
+  "technology_stack": {
+    "languages": [],
+    "frontend": {
+      "framework": ${DETECTED_FRONTEND:+\"$DETECTED_FRONTEND\"}${DETECTED_FRONTEND:-null}
+    },
+    "backend": {
+      "framework": ${DETECTED_BACKEND:+\"$DETECTED_BACKEND\"}${DETECTED_BACKEND:-null}
+    },
+    "database": {
+      "primary": ${DETECTED_DATABASE:+\"$DETECTED_DATABASE\"}${DETECTED_DATABASE:-null}
+    }
+  },
+  "directory_structure": [],
+  "components": [],
+  "patterns": {},
+  "entry_points": [],
+  "external_integrations": [],
+  "conventions": {},
+  "notes": ["Pending deep analysis - run Claude Code to complete"]
+}
+EOF
+
+    # Create analysis prompt for Claude Code
+    cat > "$TARGET_DIR/ARTIFACTS/system/deep-analysis-prompt.md" << 'EOF'
+# Deep Architecture Analysis Required
+
+A deep analysis of this codebase was requested. Please analyze the project and update:
+
+**File to update:** `ARTIFACTS/system/architecture-snapshot.json`
+
+## Analysis Tasks
+
+1. **Directory Structure**: Identify key directories and their purposes
+   - Look at top-level folders (src/, app/, lib/, components/, etc.)
+   - Note what each directory contains
+
+2. **Components**: Identify major components/modules
+   - Pages, components, services, utilities, hooks, contexts
+   - Their responsibilities and dependencies
+
+3. **Patterns**: Detect architectural patterns
+   - State management approach
+   - Data fetching patterns
+   - Routing approach
+   - Authentication method
+   - Error handling strategy
+   - Testing approach
+
+4. **Entry Points**: Find main entry points
+   - App entry (index.tsx, main.ts, app.py, etc.)
+   - API routes
+   - Workers or background jobs
+
+5. **External Integrations**: Note external services
+   - APIs consumed
+   - Third-party services
+   - Database connections
+
+6. **Conventions**: Observe coding conventions
+   - Naming patterns
+   - File organization
+   - Import style
+
+## Output
+
+Update `ARTIFACTS/system/architecture-snapshot.json` with your findings.
+Set `status` to `"completed"` when done.
+
+**Important**: Do NOT modify any existing project files. Only update files in ARTIFACTS/.
+EOF
+
+    echo -e "  Created: ${YELLOW}ARTIFACTS/system/architecture-snapshot.json${NC} (pending)"
+    echo -e "  Created: ${YELLOW}ARTIFACTS/system/deep-analysis-prompt.md${NC}"
+    echo ""
+    echo -e "${YELLOW}Deep analysis will run when you start Claude Code.${NC}"
+    echo ""
+fi
 
 # Create commands directory and copy commands
 echo "  Setting up commands..."
@@ -626,16 +726,30 @@ echo "  .claude/CLAUDE.md      - Framework instructions (auto-loaded by Claude C
 echo "  project-config.json    - Project configuration"
 echo "  ARTIFACTS/             - Directory for agent outputs"
 echo "  commands/              - Helper commands"
+if [ "$DEEP_ANALYZE" = true ]; then
+    echo ""
+    echo -e "${BLUE}Deep analysis files:${NC}"
+    echo "  ARTIFACTS/system/architecture-snapshot.json  - Architecture (pending)"
+    echo "  ARTIFACTS/system/deep-analysis-prompt.md     - Analysis instructions"
+fi
 echo ""
 echo -e "${BLUE}Next steps:${NC}"
 echo ""
-echo "  1. Review and edit .claude/CLAUDE.md to add your project context"
+if [ "$DEEP_ANALYZE" = true ]; then
+    echo "  1. Open Claude Code - it will see the deep analysis prompt"
+    echo ""
+    echo "  2. Claude will analyze your codebase and fill in architecture-snapshot.json"
+    echo ""
+    echo "  3. Then describe what you want to build"
+else
+    echo "  1. Review and edit .claude/CLAUDE.md to add your project context"
+    echo ""
+    echo "  2. Review project-config.json for accuracy"
+    echo ""
+    echo "  3. Open Claude Code and describe what you want to build:"
+    echo -e "     ${YELLOW}claude${NC}"
+fi
 echo ""
-echo "  2. Review project-config.json for accuracy"
-echo ""
-echo "  3. Open Claude Code and describe what you want to build:"
-echo -e "     ${YELLOW}claude${NC}"
-echo ""
-echo "  4. Check status anytime:"
+echo "  Check status anytime:"
 echo -e "     ${YELLOW}./commands/status.sh${NC}"
 echo ""

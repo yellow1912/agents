@@ -77,6 +77,23 @@ It will detect:
 
 And set the execution mode to `fast_feature` for incremental development.
 
+### 2c. Deep Analysis (Optional)
+
+For comprehensive architecture understanding:
+
+```bash
+~/.claude-agents/setup.sh --deep-analyze
+```
+
+This creates a pending architecture snapshot that Claude Code will complete on first run:
+- Directory structure with purposes
+- Components and their responsibilities
+- Patterns (state management, routing, auth, etc.)
+- Entry points and integrations
+- Coding conventions
+
+The analysis is saved to `ARTIFACTS/system/architecture-snapshot.json` - your existing files are never modified.
+
 ### 3. Start Building
 
 Open Claude Code in your project folder and describe what you want to build:

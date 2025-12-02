@@ -1,0 +1,174 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Existing Architecture Snapshot Schema",
+  "description": "Captured architecture of an existing codebase for context",
+  "type": "object",
+  "required": ["project_name", "captured_at", "status"],
+  "properties": {
+    "project_name": {
+      "type": "string",
+      "description": "Name of the project"
+    },
+    "captured_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the snapshot was captured"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "completed", "error"],
+      "description": "Status of the architecture capture"
+    },
+    "technology_stack": {
+      "type": "object",
+      "description": "Detected technologies",
+      "properties": {
+        "languages": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "frontend": {
+          "type": "object",
+          "properties": {
+            "framework": {"type": "string"},
+            "ui_library": {"type": "string"},
+            "state_management": {"type": "string"},
+            "styling": {"type": "string"}
+          }
+        },
+        "backend": {
+          "type": "object",
+          "properties": {
+            "framework": {"type": "string"},
+            "api_style": {"type": "string", "enum": ["REST", "GraphQL", "gRPC", "tRPC", "mixed"]},
+            "orm": {"type": "string"}
+          }
+        },
+        "database": {
+          "type": "object",
+          "properties": {
+            "primary": {"type": "string"},
+            "secondary": {"type": "array", "items": {"type": "string"}},
+            "caching": {"type": "string"}
+          }
+        },
+        "infrastructure": {
+          "type": "object",
+          "properties": {
+            "hosting": {"type": "string"},
+            "ci_cd": {"type": "string"},
+            "containerization": {"type": "string"}
+          }
+        }
+      }
+    },
+    "directory_structure": {
+      "type": "array",
+      "description": "Key directories and their purposes",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {"type": "string"},
+          "purpose": {"type": "string"},
+          "key_files": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "description": "Major components/modules identified",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "type": {
+            "type": "string",
+            "enum": ["page", "component", "service", "utility", "hook", "context", "api", "model", "middleware", "other"]
+          },
+          "path": {"type": "string"},
+          "description": {"type": "string"},
+          "dependencies": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        }
+      }
+    },
+    "patterns": {
+      "type": "object",
+      "description": "Architectural patterns detected",
+      "properties": {
+        "architecture": {
+          "type": "string",
+          "description": "Overall architecture pattern (monolith, microservices, modular, etc.)"
+        },
+        "state_management": {
+          "type": "string",
+          "description": "How state is managed (Redux, Context, Zustand, etc.)"
+        },
+        "data_fetching": {
+          "type": "string",
+          "description": "Data fetching approach (React Query, SWR, custom hooks, etc.)"
+        },
+        "routing": {
+          "type": "string",
+          "description": "Routing approach (file-based, config-based, etc.)"
+        },
+        "authentication": {
+          "type": "string",
+          "description": "Auth pattern (JWT, sessions, OAuth, etc.)"
+        },
+        "error_handling": {
+          "type": "string",
+          "description": "Error handling approach"
+        },
+        "testing": {
+          "type": "string",
+          "description": "Testing approach and frameworks"
+        }
+      }
+    },
+    "entry_points": {
+      "type": "array",
+      "description": "Main entry points to the application",
+      "items": {
+        "type": "object",
+        "properties": {
+          "file": {"type": "string"},
+          "type": {"type": "string", "enum": ["app", "api", "worker", "cli", "other"]},
+          "description": {"type": "string"}
+        }
+      }
+    },
+    "external_integrations": {
+      "type": "array",
+      "description": "External services and APIs integrated",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "type": {"type": "string"},
+          "purpose": {"type": "string"}
+        }
+      }
+    },
+    "conventions": {
+      "type": "object",
+      "description": "Coding conventions observed",
+      "properties": {
+        "naming": {"type": "string"},
+        "file_organization": {"type": "string"},
+        "imports": {"type": "string"},
+        "comments": {"type": "string"}
+      }
+    },
+    "notes": {
+      "type": "array",
+      "description": "Additional observations",
+      "items": {"type": "string"}
+    }
+  }
+}
