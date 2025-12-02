@@ -1,0 +1,212 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Backend Implementation Report Schema",
+  "type": "object",
+  "required": [
+    "api_endpoints_implemented",
+    "data_models_created",
+    "database_migrations",
+    "security_measures",
+    "testing_coverage",
+    "dependencies_added"
+  ],
+  "properties": {
+    "api_endpoints_implemented": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["method", "path", "description"],
+        "properties": {
+          "method": {"type": "string", "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]},
+          "path": {"type": "string"},
+          "description": {"type": "string"},
+          "authentication_required": {"type": "boolean"},
+          "authorization_rules": {"type": "string"},
+          "request_validation": {"type": "boolean"},
+          "rate_limited": {"type": "boolean"},
+          "response_format": {"type": "string"}
+        }
+      }
+    },
+    "data_models_created": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "table_name", "fields"],
+        "properties": {
+          "name": {"type": "string"},
+          "table_name": {"type": "string"},
+          "description": {"type": "string"},
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name", "type"],
+              "properties": {
+                "name": {"type": "string"},
+                "type": {"type": "string"},
+                "nullable": {"type": "boolean"},
+                "unique": {"type": "boolean"},
+                "indexed": {"type": "boolean"},
+                "default": {"type": "string"}
+              }
+            }
+          },
+          "relationships": {"type": "array", "items": {"type": "object"}},
+          "validation_rules": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "database_migrations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["file_name", "description", "status"],
+        "properties": {
+          "file_name": {"type": "string"},
+          "description": {"type": "string"},
+          "status": {"type": "string", "enum": ["pending", "applied", "failed"]},
+          "rollback_available": {"type": "boolean"}
+        }
+      }
+    },
+    "external_integrations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["service_name", "purpose"],
+        "properties": {
+          "service_name": {"type": "string"},
+          "purpose": {"type": "string"},
+          "api_version": {"type": "string"},
+          "authentication_method": {"type": "string"},
+          "retry_logic": {"type": "boolean"},
+          "circuit_breaker": {"type": "boolean"},
+          "timeout_ms": {"type": "number"}
+        }
+      }
+    },
+    "security_measures": {
+      "type": "object",
+      "required": ["authentication", "authorization", "input_validation"],
+      "properties": {
+        "authentication": {
+          "type": "object",
+          "required": ["strategy", "implemented"],
+          "properties": {
+            "strategy": {"type": "string", "examples": ["JWT", "OAuth2", "Session", "API_Key"]},
+            "implemented": {"type": "boolean"},
+            "details": {"type": "string"}
+          }
+        },
+        "authorization": {
+          "type": "object",
+          "required": ["strategy", "implemented"],
+          "properties": {
+            "strategy": {"type": "string", "examples": ["RBAC", "ABAC", "Permissions"]},
+            "implemented": {"type": "boolean"},
+            "details": {"type": "string"}
+          }
+        },
+        "input_validation": {
+          "type": "object",
+          "required": ["implemented"],
+          "properties": {
+            "implemented": {"type": "boolean"},
+            "validation_library": {"type": "string"},
+            "sanitization": {"type": "boolean"}
+          }
+        },
+        "rate_limiting": {
+          "type": "object",
+          "properties": {
+            "implemented": {"type": "boolean"},
+            "strategy": {"type": "string"},
+            "limits": {"type": "string"}
+          }
+        },
+        "cors_configured": {"type": "boolean"},
+        "sql_injection_prevention": {"type": "boolean"},
+        "xss_prevention": {"type": "boolean"}
+      }
+    },
+    "testing_coverage": {
+      "type": "object",
+      "required": ["unit_tests", "integration_tests"],
+      "properties": {
+        "unit_tests": {
+          "type": "object",
+          "properties": {
+            "count": {"type": "number"},
+            "coverage_percentage": {"type": "number"},
+            "framework": {"type": "string"}
+          }
+        },
+        "integration_tests": {
+          "type": "object",
+          "properties": {
+            "count": {"type": "number"},
+            "coverage_percentage": {"type": "number"},
+            "framework": {"type": "string"}
+          }
+        },
+        "api_tests": {
+          "type": "object",
+          "properties": {
+            "count": {"type": "number"},
+            "all_endpoints_covered": {"type": "boolean"},
+            "framework": {"type": "string"}
+          }
+        }
+      }
+    },
+    "performance_notes": {
+      "type": "object",
+      "properties": {
+        "caching_implemented": {"type": "boolean"},
+        "database_indexes": {"type": "array", "items": {"type": "string"}},
+        "connection_pooling": {"type": "boolean"},
+        "n_plus_one_queries_avoided": {"type": "boolean"},
+        "background_jobs": {"type": "array", "items": {"type": "string"}},
+        "avg_response_time_ms": {"type": "number"}
+      }
+    },
+    "dependencies_added": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "version", "purpose"],
+        "properties": {
+          "name": {"type": "string"},
+          "version": {"type": "string"},
+          "purpose": {"type": "string"}
+        }
+      }
+    },
+    "environment_variables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "description", "required"],
+        "properties": {
+          "name": {"type": "string"},
+          "description": {"type": "string"},
+          "required": {"type": "boolean"},
+          "default_value": {"type": "string"}
+        }
+      }
+    },
+    "known_issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["description", "severity"],
+        "properties": {
+          "description": {"type": "string"},
+          "severity": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+          "workaround": {"type": "string"}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,209 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AI Implementation Report Schema",
+  "type": "object",
+  "required": [
+    "models_used",
+    "prompts_implemented",
+    "context_strategy",
+    "evaluation_results",
+    "safety_measures",
+    "dependencies_added"
+  ],
+  "properties": {
+    "models_used": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["model", "provider", "use_case"],
+        "properties": {
+          "model": {"type": "string", "examples": ["gpt-4-turbo", "claude-3-opus", "llama-3-70b"]},
+          "provider": {"type": "string", "examples": ["OpenAI", "Anthropic", "Azure", "Self-hosted"]},
+          "use_case": {"type": "string"},
+          "cost_per_1k_tokens": {"type": "string"},
+          "context_window": {"type": "number"},
+          "max_output_tokens": {"type": "number"}
+        }
+      }
+    },
+    "prompts_implemented": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["prompt_id", "version", "purpose"],
+        "properties": {
+          "prompt_id": {"type": "string"},
+          "version": {"type": "string"},
+          "purpose": {"type": "string"},
+          "file_path": {"type": "string"},
+          "type": {"type": "string", "examples": ["system", "few_shot", "chain_of_thought", "structured_output"]},
+          "token_count": {"type": "number"},
+          "evaluation_score": {"type": "number"}
+        }
+      }
+    },
+    "context_strategy": {
+      "type": "object",
+      "required": ["type", "description"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["RAG", "conversation_history", "hybrid", "stateless", "memory_system"]
+        },
+        "description": {"type": "string"},
+        "window_size_tokens": {"type": "number"},
+        "memory_system": {
+          "type": "object",
+          "properties": {
+            "short_term": {"type": "string"},
+            "long_term": {"type": "string"},
+            "retrieval_strategy": {"type": "string"}
+          }
+        },
+        "vector_database": {
+          "type": "object",
+          "properties": {
+            "provider": {"type": "string"},
+            "embedding_model": {"type": "string"},
+            "chunk_size": {"type": "number"},
+            "overlap": {"type": "number"}
+          }
+        }
+      }
+    },
+    "evaluation_results": {
+      "type": "object",
+      "required": ["automated_tests_passing", "evaluation_metrics"],
+      "properties": {
+        "automated_tests_passing": {"type": "number"},
+        "evaluation_metrics": {
+          "type": "object",
+          "properties": {
+            "accuracy_percentage": {"type": "number"},
+            "relevance_score": {"type": "number"},
+            "coherence_score": {"type": "number"},
+            "toxicity_score": {"type": "number"},
+            "latency_p50_ms": {"type": "number"},
+            "latency_p95_ms": {"type": "number"},
+            "latency_p99_ms": {"type": "number"},
+            "cost_per_request_usd": {"type": "number"}
+          }
+        },
+        "regression_tests": {
+          "type": "object",
+          "properties": {
+            "baseline_version": {"type": "string"},
+            "improvement_percentage": {"type": "number"},
+            "degradation_percentage": {"type": "number"}
+          }
+        },
+        "human_evaluation": {
+          "type": "object",
+          "properties": {
+            "conducted": {"type": "boolean"},
+            "sample_size": {"type": "number"},
+            "avg_rating": {"type": "number"},
+            "criteria": {"type": "array", "items": {"type": "string"}}
+          }
+        }
+      }
+    },
+    "safety_measures": {
+      "type": "object",
+      "required": ["content_filtering", "hallucination_detection"],
+      "properties": {
+        "content_filtering": {
+          "type": "object",
+          "required": ["status"],
+          "properties": {
+            "status": {"type": "string", "enum": ["implemented", "not_needed", "pending"]},
+            "input_filtering": {"type": "boolean"},
+            "output_filtering": {"type": "boolean"},
+            "filter_categories": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "hallucination_detection": {
+          "type": "object",
+          "required": ["status"],
+          "properties": {
+            "status": {"type": "string", "enum": ["implemented", "not_needed", "pending"]},
+            "strategy": {"type": "string"},
+            "confidence_threshold": {"type": "number"}
+          }
+        },
+        "pii_handling": {
+          "type": "object",
+          "required": ["status"],
+          "properties": {
+            "status": {"type": "string", "enum": ["redacted", "encrypted", "not_applicable"]},
+            "detection_method": {"type": "string"},
+            "storage_policy": {"type": "string"}
+          }
+        },
+        "prompt_injection_prevention": {"type": "boolean"},
+        "jailbreak_detection": {"type": "boolean"},
+        "rate_limiting": {"type": "boolean"}
+      }
+    },
+    "fallback_mechanisms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["trigger", "action"],
+        "properties": {
+          "trigger": {"type": "string", "examples": ["timeout", "low_confidence", "error", "rate_limit"]},
+          "action": {"type": "string"},
+          "fallback_response": {"type": "string"}
+        }
+      }
+    },
+    "monitoring_setup": {
+      "type": "object",
+      "properties": {
+        "logging": {
+          "type": "object",
+          "properties": {
+            "requests_logged": {"type": "boolean"},
+            "responses_logged": {"type": "boolean"},
+            "pii_redacted": {"type": "boolean"}
+          }
+        },
+        "metrics_tracked": {"type": "array", "items": {"type": "string"}},
+        "alerts_configured": {"type": "array", "items": {"type": "string"}},
+        "dashboard_url": {"type": "string"}
+      }
+    },
+    "dependencies_added": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "version", "purpose"],
+        "properties": {
+          "name": {"type": "string"},
+          "version": {"type": "string"},
+          "purpose": {"type": "string"}
+        }
+      }
+    },
+    "cost_optimization": {
+      "type": "object",
+      "properties": {
+        "caching_strategy": {"type": "string"},
+        "token_optimization": {"type": "string"},
+        "estimated_monthly_cost_usd": {"type": "number"}
+      }
+    },
+    "known_issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["description", "severity"],
+        "properties": {
+          "description": {"type": "string"},
+          "severity": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+          "workaround": {"type": "string"}
+        }
+      }
+    }
+  }
+}

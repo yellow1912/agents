@@ -1,0 +1,429 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Governance Review Report Schema",
+  "description": "Output schema for the Governance Agent's compliance review report",
+  "type": "object",
+  "required": [
+    "workflow_id",
+    "stage_reviewed",
+    "verdict",
+    "applicable_regulations",
+    "compliance_status",
+    "timestamp"
+  ],
+  "properties": {
+    "workflow_id": {
+      "type": "string",
+      "description": "Reference to the workflow being reviewed"
+    },
+    "stage_reviewed": {
+      "type": "string",
+      "enum": ["requirements", "architecture", "implementation", "deployment"],
+      "description": "Which stage was reviewed"
+    },
+    "artifacts_reviewed": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "List of artifact paths that were reviewed"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["compliant", "compliant_with_conditions", "needs_remediation", "non_compliant"],
+      "description": "Overall compliance verdict"
+    },
+    "jurisdiction_scope": {
+      "type": "object",
+      "properties": {
+        "regions": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Geographic regions covered (e.g., EU, US, California)"
+        },
+        "industries": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Industries applicable (e.g., healthcare, finance)"
+        },
+        "user_demographics": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "User categories (e.g., children, general public)"
+        }
+      },
+      "description": "Scope of jurisdictions and contexts assessed"
+    },
+    "applicable_regulations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["regulation", "status"],
+        "properties": {
+          "regulation": {
+            "type": "string",
+            "description": "Name of the regulation (e.g., GDPR, CCPA, HIPAA)"
+          },
+          "full_name": {
+            "type": "string",
+            "description": "Full name of the regulation"
+          },
+          "jurisdiction": {
+            "type": "string",
+            "description": "Where this regulation applies"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["compliant", "partial", "non_compliant", "not_applicable"],
+            "description": "Compliance status for this regulation"
+          },
+          "requirements_assessed": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["requirement", "status"],
+              "properties": {
+                "requirement": {
+                  "type": "string",
+                  "description": "Specific requirement within the regulation"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": ["met", "not_met", "partial", "not_applicable"],
+                  "description": "Whether this requirement is met"
+                },
+                "evidence": {
+                  "type": "string",
+                  "description": "Evidence of compliance"
+                },
+                "gap": {
+                  "type": "string",
+                  "description": "What is missing if not fully met"
+                },
+                "remediation": {
+                  "type": "string",
+                  "description": "How to achieve compliance"
+                }
+              }
+            },
+            "description": "Individual requirements within this regulation"
+          },
+          "overall_risk": {
+            "type": "string",
+            "enum": ["low", "medium", "high"],
+            "description": "Overall compliance risk for this regulation"
+          }
+        }
+      },
+      "description": "All regulations assessed and their compliance status"
+    },
+    "compliance_status": {
+      "type": "object",
+      "properties": {
+        "data_privacy": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["compliant", "partial", "non_compliant", "not_applicable"]
+            },
+            "regulations_applicable": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "key_findings": {
+              "type": "array",
+              "items": {"type": "string"}
+            }
+          }
+        },
+        "ai_governance": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["compliant", "partial", "non_compliant", "not_applicable"]
+            },
+            "ai_risk_classification": {
+              "type": "string",
+              "enum": ["unacceptable", "high", "limited", "minimal", "not_applicable"],
+              "description": "EU AI Act risk classification"
+            },
+            "key_findings": {
+              "type": "array",
+              "items": {"type": "string"}
+            }
+          }
+        },
+        "industry_specific": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["compliant", "partial", "non_compliant", "not_applicable"]
+            },
+            "regulations_applicable": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "key_findings": {
+              "type": "array",
+              "items": {"type": "string"}
+            }
+          }
+        },
+        "accessibility": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["compliant", "partial", "non_compliant", "not_applicable"]
+            },
+            "standard": {
+              "type": "string",
+              "description": "Accessibility standard (e.g., WCAG 2.1 AA)"
+            },
+            "key_findings": {
+              "type": "array",
+              "items": {"type": "string"}
+            }
+          }
+        },
+        "intellectual_property": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["clear", "concerns", "issues", "not_assessed"]
+            },
+            "key_findings": {
+              "type": "array",
+              "items": {"type": "string"}
+            }
+          }
+        },
+        "organizational_policies": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["compliant", "partial", "non_compliant", "not_assessed"]
+            },
+            "key_findings": {
+              "type": "array",
+              "items": {"type": "string"}
+            }
+          }
+        }
+      },
+      "description": "Compliance status by domain"
+    },
+    "blocking_issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["regulation", "requirement", "description", "severity"],
+        "properties": {
+          "regulation": {
+            "type": "string",
+            "description": "Which regulation is violated"
+          },
+          "requirement": {
+            "type": "string",
+            "description": "Which specific requirement"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the compliance issue"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["high", "critical"]
+          },
+          "legal_risk": {
+            "type": "string",
+            "description": "Potential legal consequences"
+          },
+          "resolution_required": {
+            "type": "boolean",
+            "default": true
+          },
+          "resolution_guidance": {
+            "type": "string",
+            "description": "How to resolve this issue"
+          }
+        }
+      },
+      "description": "Compliance issues that block progression"
+    },
+    "conditions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["condition", "regulation", "stage_to_implement"],
+        "properties": {
+          "condition": {
+            "type": "string",
+            "description": "What must be done for compliance"
+          },
+          "regulation": {
+            "type": "string",
+            "description": "Which regulation requires this"
+          },
+          "stage_to_implement": {
+            "type": "string",
+            "enum": ["architecture", "implementation", "deployment", "ongoing"],
+            "description": "When this must be implemented"
+          },
+          "verification_method": {
+            "type": "string",
+            "description": "How compliance will be verified"
+          }
+        }
+      },
+      "description": "Conditions that must be met for continued compliance"
+    },
+    "documentation_required": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["document", "regulation", "status"],
+        "properties": {
+          "document": {
+            "type": "string",
+            "description": "Document name (e.g., Privacy Policy)"
+          },
+          "regulation": {
+            "type": "string",
+            "description": "Which regulation requires it"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["exists", "needs_update", "missing"],
+            "description": "Current status of the document"
+          },
+          "requirements": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "What the document must contain"
+          }
+        }
+      },
+      "description": "Required compliance documentation"
+    },
+    "data_flows_reviewed": {
+      "type": "object",
+      "properties": {
+        "data_collected": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "data_type": {"type": "string"},
+              "pii_classification": {
+                "type": "string",
+                "enum": ["not_pii", "pii", "sensitive_pii", "special_category"]
+              },
+              "lawful_basis": {"type": "string"},
+              "retention_period": {"type": "string"}
+            }
+          }
+        },
+        "third_party_sharing": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "recipient": {"type": "string"},
+              "purpose": {"type": "string"},
+              "data_shared": {"type": "array", "items": {"type": "string"}},
+              "agreement_in_place": {"type": "boolean"}
+            }
+          }
+        },
+        "cross_border_transfers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "destination": {"type": "string"},
+              "transfer_mechanism": {"type": "string"},
+              "compliant": {"type": "boolean"}
+            }
+          }
+        }
+      },
+      "description": "Review of data flows for privacy compliance"
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "recommendation": {"type": "string"},
+          "domain": {"type": "string"},
+          "priority": {
+            "type": "string",
+            "enum": ["low", "medium", "high"]
+          },
+          "benefit": {"type": "string"}
+        }
+      },
+      "description": "Non-required but recommended compliance improvements"
+    },
+    "audit_trail": {
+      "type": "object",
+      "properties": {
+        "review_date": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "reviewer": {
+          "type": "string",
+          "default": "governance_agent"
+        },
+        "review_scope": {
+          "type": "string"
+        },
+        "previous_reviews": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "date": {"type": "string", "format": "date-time"},
+              "verdict": {"type": "string"},
+              "changes_since": {"type": "string"}
+            }
+          }
+        }
+      },
+      "description": "Audit trail information"
+    },
+    "next_review": {
+      "type": "object",
+      "properties": {
+        "stage": {
+          "type": "string",
+          "description": "When next governance review is needed"
+        },
+        "focus_areas": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "What to focus on in next review"
+        },
+        "required": {
+          "type": "boolean",
+          "description": "Whether next review is required"
+        }
+      },
+      "description": "Guidance for subsequent governance reviews"
+    },
+    "reviewer_notes": {
+      "type": "string",
+      "description": "Additional notes from the governance reviewer"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this review was completed"
+    }
+  }
+}

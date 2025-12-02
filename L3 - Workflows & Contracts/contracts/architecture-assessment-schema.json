@@ -1,0 +1,251 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Architecture Assessment Schema",
+  "description": "Assessment produced by System Architect in fast_feature mode to evaluate architecture impact",
+  "type": "object",
+  "required": [
+    "feature_name",
+    "architecture_impact",
+    "assessment",
+    "recommendations",
+    "timestamp"
+  ],
+  "properties": {
+    "feature_name": {
+      "type": "string",
+      "description": "Name of the feature being assessed"
+    },
+    "feature_id": {
+      "type": "string",
+      "description": "Reference to functional requirement ID from product-requirements-packet.json"
+    },
+    "architecture_impact": {
+      "type": "string",
+      "enum": ["none", "minor", "major"],
+      "description": "Level of architecture change required: none = fits existing, minor = small updates, major = significant redesign"
+    },
+    "assessment": {
+      "type": "object",
+      "required": [
+        "fits_existing_architecture",
+        "required_changes",
+        "affected_components",
+        "risk_level"
+      ],
+      "properties": {
+        "fits_existing_architecture": {
+          "type": "boolean",
+          "description": "Whether the feature can be implemented within existing architecture"
+        },
+        "required_changes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["change", "component", "complexity"],
+            "properties": {
+              "change": {
+                "type": "string",
+                "description": "Description of the required change"
+              },
+              "component": {
+                "type": "string",
+                "description": "Which component is affected"
+              },
+              "complexity": {
+                "type": "string",
+                "enum": ["trivial", "low", "medium", "high"],
+                "description": "Complexity of implementing this change"
+              },
+              "breaking_change": {
+                "type": "boolean",
+                "description": "Whether this change breaks existing functionality"
+              }
+            }
+          },
+          "description": "List of changes required to support the feature"
+        },
+        "affected_components": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Names of existing components that will be modified"
+        },
+        "new_components_needed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "type", "purpose"],
+            "properties": {
+              "name": {"type": "string"},
+              "type": {
+                "type": "string",
+                "examples": ["frontend_component", "api_endpoint", "database_table", "service", "integration"]
+              },
+              "purpose": {"type": "string"}
+            }
+          },
+          "description": "New components that need to be created"
+        },
+        "risk_level": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "critical"],
+          "description": "Overall risk level of implementing this feature"
+        },
+        "risk_factors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["factor", "severity"],
+            "properties": {
+              "factor": {"type": "string"},
+              "severity": {"type": "string", "enum": ["low", "medium", "high"]},
+              "mitigation": {"type": "string"}
+            }
+          },
+          "description": "Specific risk factors identified"
+        }
+      }
+    },
+    "recommendations": {
+      "type": "object",
+      "required": ["approach", "estimated_complexity"],
+      "properties": {
+        "approach": {
+          "type": "string",
+          "description": "Recommended implementation approach"
+        },
+        "estimated_complexity": {
+          "type": "string",
+          "enum": ["low", "medium", "high"],
+          "description": "Overall complexity estimate"
+        },
+        "technical_dependencies": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Technical dependencies that must be in place"
+        },
+        "suggested_sequence": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Suggested order of implementation steps"
+        },
+        "alternative_approaches": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "approach": {"type": "string"},
+              "trade_offs": {"type": "string"},
+              "when_to_use": {"type": "string"}
+            }
+          },
+          "description": "Alternative approaches considered"
+        }
+      }
+    },
+    "api_changes": {
+      "type": "object",
+      "description": "API modifications required for the feature",
+      "properties": {
+        "new_endpoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["method", "path", "purpose"],
+            "properties": {
+              "method": {"type": "string", "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]},
+              "path": {"type": "string"},
+              "purpose": {"type": "string"}
+            }
+          }
+        },
+        "modified_endpoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "changes"],
+            "properties": {
+              "path": {"type": "string"},
+              "changes": {"type": "string"}
+            }
+          }
+        },
+        "deprecated_endpoints": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "data_model_changes": {
+      "type": "object",
+      "description": "Database/data model modifications required",
+      "properties": {
+        "new_models": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "purpose"],
+            "properties": {
+              "name": {"type": "string"},
+              "purpose": {"type": "string"},
+              "key_fields": {"type": "array", "items": {"type": "string"}}
+            }
+          }
+        },
+        "modified_models": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "changes"],
+            "properties": {
+              "name": {"type": "string"},
+              "changes": {"type": "array", "items": {"type": "string"}}
+            }
+          }
+        },
+        "migrations_required": {
+          "type": "boolean",
+          "description": "Whether database migrations are needed"
+        }
+      }
+    },
+    "security_considerations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["concern", "recommendation"],
+        "properties": {
+          "concern": {"type": "string"},
+          "recommendation": {"type": "string"},
+          "priority": {"type": "string", "enum": ["low", "medium", "high", "critical"]}
+        }
+      },
+      "description": "Security concerns specific to this feature"
+    },
+    "next_action": {
+      "type": "string",
+      "enum": ["proceed_to_implementation", "full_architecture_redesign", "needs_clarification", "blocked"],
+      "description": "Recommended next action based on assessment"
+    },
+    "engineers_required": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["frontend_engineer", "backend_engineer", "ai_engineer", "devops_engineer"]
+      },
+      "description": "Which engineers need to be involved"
+    },
+    "reference_architecture_packet": {
+      "type": "string",
+      "description": "Path to the existing architecture-handover-packet.json being assessed against"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this assessment was created"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes or context from the architect"
+    }
+  }
+}

@@ -1,0 +1,374 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Controller Orchestrator Output Schema",
+  "description": "Output schema for the Controller Orchestrator's log and audit trail",
+  "type": "object",
+  "required": [
+    "workflow_id",
+    "events",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "workflow_id": {
+      "type": "string",
+      "description": "Unique identifier for the workflow this log belongs to"
+    },
+    "events": {
+      "type": "array",
+      "description": "Chronological list of orchestration events",
+      "items": {
+        "type": "object",
+        "required": ["timestamp", "event_type"],
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When this event occurred"
+          },
+          "event_type": {
+            "type": "string",
+            "enum": [
+              "workflow_started",
+              "workflow_completed",
+              "workflow_failed",
+              "workflow_paused",
+              "workflow_resumed",
+              "stage_started",
+              "stage_completed",
+              "stage_failed",
+              "stage_blocked",
+              "stage_skipped",
+              "agent_invoked",
+              "agent_timeout",
+              "validation_started",
+              "validation_passed",
+              "validation_failed",
+              "human_approval_requested",
+              "human_approval_received",
+              "human_rejection_received",
+              "human_feedback_received",
+              "safety_review_started",
+              "safety_review_passed",
+              "safety_review_blocked",
+              "governance_review_started",
+              "governance_review_passed",
+              "governance_review_blocked",
+              "code_health_assessment_started",
+              "code_health_assessment_passed",
+              "code_health_assessment_blocked",
+              "parallel_execution_started",
+              "parallel_execution_synced",
+              "retry_attempted",
+              "escalation_triggered",
+              "rollback_initiated",
+              "rollback_completed",
+              "error"
+            ],
+            "description": "Type of orchestration event"
+          },
+          "stage": {
+            "type": "string",
+            "description": "Stage this event relates to (if applicable)",
+            "enum": [
+              "requirements",
+              "architecture",
+              "frontend_implementation",
+              "backend_implementation",
+              "ai_implementation",
+              "qa_testing",
+              "deployment",
+              "safety_review",
+              "governance_review",
+              "code_health_assessment"
+            ]
+          },
+          "agent": {
+            "type": "string",
+            "description": "Agent this event relates to (if applicable)",
+            "enum": [
+              "product_manager",
+              "system_architect",
+              "frontend_engineer",
+              "backend_engineer",
+              "ai_engineer",
+              "qa_engineer",
+              "devops_engineer",
+              "safety_agent",
+              "governance_agent",
+              "code_health_agent"
+            ]
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional details about the event",
+            "properties": {
+              "message": {
+                "type": "string",
+                "description": "Human-readable description of the event"
+              },
+              "artifact": {
+                "type": "string",
+                "description": "Artifact involved (if applicable)"
+              },
+              "schema": {
+                "type": "string",
+                "description": "Schema used for validation (if applicable)"
+              },
+              "errors": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Error messages (if applicable)"
+              },
+              "decision": {
+                "type": "string",
+                "description": "Decision made (for human interactions)"
+              },
+              "retry_count": {
+                "type": "integer",
+                "description": "Current retry attempt number"
+              },
+              "parallel_stages": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Stages in parallel execution set"
+              },
+              "completed_stages": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Stages completed in parallel set"
+              },
+              "pending_stages": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Stages still pending in parallel set"
+              }
+            }
+          },
+          "duration_ms": {
+            "type": "integer",
+            "description": "Duration of the event in milliseconds (for timed events)"
+          },
+          "previous_status": {
+            "type": "string",
+            "description": "Status before this event (for state changes)"
+          },
+          "new_status": {
+            "type": "string",
+            "description": "Status after this event (for state changes)"
+          }
+        }
+      }
+    },
+    "validation_reports": {
+      "type": "array",
+      "description": "Detailed validation reports for all artifacts",
+      "items": {
+        "type": "object",
+        "required": ["timestamp", "artifact", "schema", "valid"],
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "artifact": {
+            "type": "string",
+            "description": "Path to the artifact validated"
+          },
+          "schema": {
+            "type": "string",
+            "description": "Schema used for validation"
+          },
+          "valid": {
+            "type": "boolean",
+            "description": "Whether validation passed"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "description": "JSON path to the error location"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "Error message"
+                },
+                "expected": {
+                  "type": "string",
+                  "description": "Expected value or type"
+                },
+                "actual": {
+                  "type": "string",
+                  "description": "Actual value or type"
+                }
+              }
+            },
+            "description": "Validation errors (if any)"
+          },
+          "stage": {
+            "type": "string",
+            "description": "Stage this validation belongs to"
+          }
+        }
+      }
+    },
+    "notifications_sent": {
+      "type": "array",
+      "description": "Record of notifications sent to users/agents",
+      "items": {
+        "type": "object",
+        "required": ["timestamp", "type", "recipient"],
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "approval_required",
+              "validation_failed",
+              "stage_blocked",
+              "workflow_complete",
+              "timeout_warning",
+              "escalation",
+              "rollback_alert",
+              "qa_decision_required"
+            ]
+          },
+          "recipient": {
+            "type": "string",
+            "description": "Who received the notification (user, agent name)"
+          },
+          "content": {
+            "type": "object",
+            "description": "Notification content"
+          },
+          "acknowledged": {
+            "type": "boolean",
+            "description": "Whether the notification was acknowledged"
+          },
+          "acknowledged_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "description": "Summary metrics for the workflow",
+      "properties": {
+        "total_duration_seconds": {
+          "type": "number",
+          "description": "Total workflow duration"
+        },
+        "stages_completed": {
+          "type": "integer",
+          "description": "Number of stages completed successfully"
+        },
+        "stages_skipped": {
+          "type": "integer",
+          "description": "Number of stages skipped"
+        },
+        "stages_failed": {
+          "type": "integer",
+          "description": "Number of stages that failed"
+        },
+        "validation_attempts": {
+          "type": "integer",
+          "description": "Total validation attempts"
+        },
+        "validation_failures": {
+          "type": "integer",
+          "description": "Total validation failures"
+        },
+        "human_interventions": {
+          "type": "integer",
+          "description": "Number of human approval/decision points"
+        },
+        "retries": {
+          "type": "integer",
+          "description": "Total retry attempts across all stages"
+        },
+        "escalations": {
+          "type": "integer",
+          "description": "Number of escalations to user"
+        },
+        "rollbacks": {
+          "type": "integer",
+          "description": "Number of rollbacks performed"
+        },
+        "stage_durations": {
+          "type": "object",
+          "description": "Duration in seconds for each stage",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "final_status": {
+          "type": "string",
+          "enum": ["completed", "failed", "rolled_back", "aborted"],
+          "description": "Final workflow status"
+        }
+      }
+    },
+    "errors": {
+      "type": "array",
+      "description": "All errors encountered during orchestration",
+      "items": {
+        "type": "object",
+        "required": ["timestamp", "error_type", "message"],
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "error_type": {
+            "type": "string",
+            "enum": [
+              "validation_error",
+              "timeout_error",
+              "agent_error",
+              "gate_error",
+              "sequence_error",
+              "state_error",
+              "rollback_error",
+              "unknown_error"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "stage": {
+            "type": "string"
+          },
+          "agent": {
+            "type": "string"
+          },
+          "recoverable": {
+            "type": "boolean",
+            "description": "Whether this error is recoverable"
+          },
+          "resolution": {
+            "type": "string",
+            "description": "How the error was resolved (if applicable)"
+          }
+        }
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this log was created"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this log was last updated"
+    }
+  }
+}

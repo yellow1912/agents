@@ -1,0 +1,103 @@
+{
+  "$schema": "../L3 - Workflows & Contracts/contracts/project-config-schema.json",
+  "project_name": "My Project",
+  "project_id": "my-project",
+  "project_type": "full_stack_web_app",
+  "description": "Description of what this project does",
+  "execution_mode_default": "full_system",
+
+  "agents": {
+    "required": [
+      "product_manager",
+      "system_architect",
+      "frontend_engineer",
+      "backend_engineer",
+      "qa_engineer",
+      "devops_engineer"
+    ],
+    "optional": [
+      "ai_engineer"
+    ],
+    "excluded": []
+  },
+
+  "technology_stack": {
+    "frontend": {
+      "framework": "react",
+      "language": "typescript",
+      "styling": "tailwind",
+      "state_management": "zustand"
+    },
+    "backend": {
+      "framework": "fastify",
+      "language": "typescript",
+      "api_style": "rest"
+    },
+    "database": {
+      "primary": "postgresql",
+      "cache": "redis"
+    },
+    "infrastructure": {
+      "cloud_provider": "aws",
+      "containerization": "docker",
+      "ci_cd": "github-actions"
+    }
+  },
+
+  "quality_gates": {
+    "test_coverage_minimum": 80,
+    "lint_errors_allowed": 0,
+    "type_coverage_minimum": 90,
+    "code_health_minimum": "acceptable",
+    "require_code_health_check": true
+  },
+
+  "governance": {
+    "jurisdictions": ["US"],
+    "industry": "general",
+    "data_classification": "internal",
+    "compliance_frameworks": [],
+    "requires_dpia": false
+  },
+
+  "safety": {
+    "content_moderation_required": false
+  },
+
+  "human_gates": {
+    "requirements_approval": true,
+    "architecture_selection": true,
+    "deployment_approval": true,
+    "qa_override_allowed": false
+  },
+
+  "deployment": {
+    "environments": [
+      {
+        "name": "development",
+        "type": "development",
+        "auto_deploy": true,
+        "requires_approval": false
+      },
+      {
+        "name": "staging",
+        "type": "staging",
+        "auto_deploy": true,
+        "requires_approval": false
+      },
+      {
+        "name": "production",
+        "type": "production",
+        "auto_deploy": false,
+        "requires_approval": true
+      }
+    ],
+    "deployment_strategy": "rolling",
+    "rollback_enabled": true
+  },
+
+  "metadata": {
+    "version": "1.0.0",
+    "owner": "team-name"
+  }
+}

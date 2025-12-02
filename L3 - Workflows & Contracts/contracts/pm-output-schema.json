@@ -1,0 +1,166 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Product Requirements Packet Schema",
+  "type": "object",
+  "required": [
+    "execution_mode",
+    "problem_and_context",
+    "personas",
+    "outcome_brief",
+    "success_metrics",
+    "use_cases_and_journeys",
+    "functional_requirements",
+    "non_functional_requirements",
+    "ai_behavior_requirements",
+    "constraints_and_assumptions",
+    "risks_and_open_questions",
+    "release_strategy",
+    "experiment_plan"
+  ],
+  "properties": {
+    "execution_mode": {
+      "type": "string",
+      "enum": ["full_system", "fast_feature"]
+    },
+    "problem_and_context": {
+      "type": "object",
+      "required": ["user_and_customer", "core_problem", "business_context_and_goals", "constraints"],
+      "properties": {
+        "user_and_customer": {"type": "string"},
+        "core_problem": {"type": "string"},
+        "business_context_and_goals": {"type": "string"},
+        "constraints": {
+          "type": "object",
+          "properties": {
+            "time": {"type": "string"},
+            "budget": {"type": "string"},
+            "platform": {"type": "string"},
+            "regulation": {"type": "string"}
+          }
+        }
+      }
+    },
+    "personas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "role", "goals", "frustrations", "environment"],
+        "properties": {
+          "id": {"type": "string"},
+          "role": {"type": "string"},
+          "goals": {"type": "array", "items": {"type": "string"}},
+          "frustrations": {"type": "array", "items": {"type": "string"}},
+          "environment": {"type": "string"}
+        }
+      }
+    },
+    "outcome_brief": {"type": "string"},
+    "success_metrics": {
+      "type": "object",
+      "properties": {
+        "leading": {"type": "array", "items": {"type": "string"}},
+        "lagging": {"type": "array", "items": {"type": "string"}},
+        "guardrail": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "time_horizon": {
+      "type": "object",
+      "properties": {
+        "mvp": {"type": "string"},
+        "v1": {"type": "string"},
+        "later_roadmap": {"type": "string"}
+      }
+    },
+    "use_cases_and_journeys": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "trigger", "steps", "desired_outcome", "failure_modes"],
+        "properties": {
+          "id": {"type": "string"},
+          "trigger": {"type": "string"},
+          "steps": {"type": "array", "items": {"type": "string"}},
+          "desired_outcome": {"type": "string"},
+          "failure_modes": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "functional_requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "description", "target_user", "related_use_case_ids", "priority", "acceptance_criteria"],
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "description": {"type": "string"},
+          "target_user": {"type": "string"},
+          "related_use_case_ids": {"type": "array", "items": {"type": "string"}},
+          "priority": {"type": "string", "enum": ["must", "should", "could", "wont"]},
+          "acceptance_criteria": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "non_functional_requirements": {
+      "type": "object",
+      "required": ["latency", "reliability", "data_privacy", "explainability", "safety"],
+      "properties": {
+        "latency": {"type": "string"},
+        "reliability": {"type": "string"},
+        "data_privacy": {"type": "string"},
+        "explainability": {"type": "string"},
+        "safety": {"type": "string"}
+      }
+    },
+    "ai_behavior_requirements": {
+      "type": "object",
+      "required": ["input_and_context", "output_expectations", "feedback_loops", "risk_cases_and_mitigations", "human_in_the_loop"],
+      "properties": {
+        "input_and_context": {"type": "string"},
+        "output_expectations": {
+          "type": "object",
+          "properties": {
+            "tone": {"type": "string"},
+            "structure": {"type": "string"},
+            "constraints": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "feedback_loops": {"type": "array", "items": {"type": "string"}},
+        "risk_cases_and_mitigations": {"type": "array", "items": {"type": "object"}},
+        "human_in_the_loop": {"type": "string"}
+      }
+    },
+    "constraints_and_assumptions": {
+      "type": "object",
+      "properties": {
+        "constraints": {"type": "array", "items": {"type": "string"}},
+        "assumptions": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "risks_and_open_questions": {
+      "type": "object",
+      "properties": {
+        "risks": {"type": "array", "items": {"type": "string"}},
+        "open_questions": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "release_strategy": {
+      "type": "object",
+      "required": ["mvp_scope", "later_phases"],
+      "properties": {
+        "mvp_scope": {"type": "string"},
+        "walking_skeleton": {"type": "string"},
+        "later_phases": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "experiment_plan": {
+      "type": "object",
+      "properties": {
+        "hypotheses": {"type": "array", "items": {"type": "string"}},
+        "experiment_design": {"type": "string"},
+        "early_signals": {"type": "array", "items": {"type": "string"}},
+        "kill_pivot_conditions": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

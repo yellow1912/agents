@@ -1,0 +1,420 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Project Configuration Schema",
+  "description": "Configuration schema for AI-native development projects",
+  "type": "object",
+  "required": [
+    "project_name",
+    "project_type"
+  ],
+  "properties": {
+    "project_name": {
+      "type": "string",
+      "description": "Human-readable name for the project"
+    },
+    "project_id": {
+      "type": "string",
+      "description": "Unique identifier for the project"
+    },
+    "project_type": {
+      "type": "string",
+      "enum": [
+        "full_stack_web_app",
+        "api_only_backend",
+        "static_website",
+        "ai_feature",
+        "infrastructure",
+        "mobile_app",
+        "cli_tool",
+        "library",
+        "custom"
+      ],
+      "description": "Type of project - determines default agent selection"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of the project"
+    },
+    "execution_mode_default": {
+      "type": "string",
+      "enum": ["full_system", "fast_feature"],
+      "default": "full_system",
+      "description": "Default execution mode for new workflows"
+    },
+    "agents": {
+      "type": "object",
+      "description": "Agent configuration - overrides defaults from project_type",
+      "properties": {
+        "required": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "product_manager",
+              "system_architect",
+              "frontend_engineer",
+              "backend_engineer",
+              "ai_engineer",
+              "qa_engineer",
+              "devops_engineer"
+            ]
+          },
+          "description": "Agents that must be invoked for this project"
+        },
+        "optional": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "product_manager",
+              "system_architect",
+              "frontend_engineer",
+              "backend_engineer",
+              "ai_engineer",
+              "qa_engineer",
+              "devops_engineer"
+            ]
+          },
+          "description": "Agents that may be invoked based on feature requirements"
+        },
+        "excluded": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Agents that should never be invoked for this project"
+        }
+      }
+    },
+    "technology_stack": {
+      "type": "object",
+      "description": "Preferred technology choices for the project",
+      "properties": {
+        "frontend": {
+          "type": "object",
+          "properties": {
+            "framework": {
+              "type": "string",
+              "examples": ["react", "vue", "svelte", "nextjs", "angular"]
+            },
+            "language": {
+              "type": "string",
+              "examples": ["typescript", "javascript"]
+            },
+            "styling": {
+              "type": "string",
+              "examples": ["tailwind", "css-modules", "styled-components", "sass"]
+            },
+            "state_management": {
+              "type": "string",
+              "examples": ["redux", "zustand", "context", "jotai"]
+            }
+          }
+        },
+        "backend": {
+          "type": "object",
+          "properties": {
+            "framework": {
+              "type": "string",
+              "examples": ["express", "fastify", "nestjs", "fastapi", "django", "rails"]
+            },
+            "language": {
+              "type": "string",
+              "examples": ["typescript", "python", "go", "ruby"]
+            },
+            "api_style": {
+              "type": "string",
+              "enum": ["rest", "graphql", "grpc"],
+              "default": "rest"
+            }
+          }
+        },
+        "database": {
+          "type": "object",
+          "properties": {
+            "primary": {
+              "type": "string",
+              "examples": ["postgresql", "mysql", "mongodb", "sqlite"]
+            },
+            "cache": {
+              "type": "string",
+              "examples": ["redis", "memcached"]
+            },
+            "search": {
+              "type": "string",
+              "examples": ["elasticsearch", "algolia", "meilisearch"]
+            }
+          }
+        },
+        "ai_ml": {
+          "type": "object",
+          "properties": {
+            "llm_provider": {
+              "type": "string",
+              "examples": ["anthropic", "openai", "local"]
+            },
+            "embedding_provider": {
+              "type": "string",
+              "examples": ["anthropic", "openai", "cohere"]
+            },
+            "vector_store": {
+              "type": "string",
+              "examples": ["pinecone", "weaviate", "pgvector", "chroma"]
+            }
+          }
+        },
+        "infrastructure": {
+          "type": "object",
+          "properties": {
+            "cloud_provider": {
+              "type": "string",
+              "examples": ["aws", "gcp", "azure", "vercel", "railway"]
+            },
+            "containerization": {
+              "type": "string",
+              "examples": ["docker", "podman"]
+            },
+            "orchestration": {
+              "type": "string",
+              "examples": ["kubernetes", "ecs", "cloud-run"]
+            },
+            "ci_cd": {
+              "type": "string",
+              "examples": ["github-actions", "gitlab-ci", "circleci"]
+            }
+          }
+        }
+      }
+    },
+    "quality_gates": {
+      "type": "object",
+      "description": "Quality thresholds and gates configuration",
+      "properties": {
+        "test_coverage_minimum": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 80,
+          "description": "Minimum test coverage percentage required"
+        },
+        "lint_errors_allowed": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Maximum number of lint errors allowed"
+        },
+        "type_coverage_minimum": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 90,
+          "description": "Minimum type coverage percentage"
+        },
+        "code_health_minimum": {
+          "type": "string",
+          "enum": ["healthy", "acceptable", "concerning"],
+          "default": "acceptable",
+          "description": "Minimum code health verdict to proceed"
+        },
+        "require_code_health_check": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to run code health checks"
+        }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "description": "Governance and compliance configuration",
+      "properties": {
+        "jurisdictions": {
+          "type": "array",
+          "items": {"type": "string"},
+          "examples": [["EU", "US", "California"]],
+          "description": "Target jurisdictions for compliance"
+        },
+        "industry": {
+          "type": "string",
+          "examples": ["healthcare", "finance", "education", "general"],
+          "description": "Industry for regulatory compliance"
+        },
+        "data_classification": {
+          "type": "string",
+          "enum": ["public", "internal", "confidential", "restricted"],
+          "default": "internal",
+          "description": "Default data classification"
+        },
+        "compliance_frameworks": {
+          "type": "array",
+          "items": {"type": "string"},
+          "examples": [["GDPR", "SOC2", "HIPAA"]],
+          "description": "Compliance frameworks to follow"
+        },
+        "requires_dpia": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether Data Protection Impact Assessment is required"
+        }
+      }
+    },
+    "safety": {
+      "type": "object",
+      "description": "Safety configuration",
+      "properties": {
+        "risk_level_override": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "critical"],
+          "description": "Override automatic risk level determination"
+        },
+        "safety_review_all_stages": {
+          "type": "boolean",
+          "default": false,
+          "description": "Require safety review at every stage (not just requirements)"
+        },
+        "content_moderation_required": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether user-generated content requires moderation"
+        },
+        "ai_safety_review_required": {
+          "type": "boolean",
+          "description": "Whether AI safety review is required (auto-detected if not specified)"
+        }
+      }
+    },
+    "human_gates": {
+      "type": "object",
+      "description": "Human approval gate configuration",
+      "properties": {
+        "requirements_approval": {
+          "type": "boolean",
+          "default": true,
+          "description": "Require human approval of requirements"
+        },
+        "architecture_selection": {
+          "type": "boolean",
+          "default": true,
+          "description": "Require human selection of architecture (full_system mode)"
+        },
+        "deployment_approval": {
+          "type": "boolean",
+          "default": true,
+          "description": "Require human approval before production deployment"
+        },
+        "qa_override_allowed": {
+          "type": "boolean",
+          "default": false,
+          "description": "Allow human to override QA failures"
+        }
+      }
+    },
+    "deployment": {
+      "type": "object",
+      "description": "Deployment configuration",
+      "properties": {
+        "environments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "type"],
+            "properties": {
+              "name": {"type": "string"},
+              "type": {
+                "type": "string",
+                "enum": ["development", "staging", "production"]
+              },
+              "auto_deploy": {
+                "type": "boolean",
+                "default": false
+              },
+              "requires_approval": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "deployment_strategy": {
+          "type": "string",
+          "enum": ["blue_green", "canary", "rolling", "direct"],
+          "default": "rolling"
+        },
+        "rollback_enabled": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "notifications": {
+      "type": "object",
+      "description": "Notification preferences",
+      "properties": {
+        "channels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["email", "slack", "webhook"]
+          }
+        },
+        "notify_on": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "workflow_started",
+              "approval_required",
+              "stage_completed",
+              "stage_failed",
+              "workflow_completed",
+              "deployment_completed"
+            ]
+          }
+        }
+      }
+    },
+    "existing_codebase": {
+      "type": "object",
+      "description": "Configuration for existing codebase (if not greenfield)",
+      "properties": {
+        "repository_url": {
+          "type": "string",
+          "description": "URL to the existing repository"
+        },
+        "main_branch": {
+          "type": "string",
+          "default": "main"
+        },
+        "has_existing_architecture": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether architecture-handover-packet.json exists"
+        },
+        "architecture_packet_path": {
+          "type": "string",
+          "description": "Path to existing architecture packet"
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "team": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

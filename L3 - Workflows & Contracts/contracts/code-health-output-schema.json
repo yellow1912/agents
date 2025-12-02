@@ -1,0 +1,432 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Code Health Report Schema",
+  "description": "Output schema for the Code Health Agent's assessment report",
+  "type": "object",
+  "required": [
+    "workflow_id",
+    "assessment_type",
+    "verdict",
+    "health_score",
+    "categories",
+    "timestamp"
+  ],
+  "properties": {
+    "workflow_id": {
+      "type": "string",
+      "description": "Reference to the workflow (if applicable)"
+    },
+    "assessment_type": {
+      "type": "string",
+      "enum": ["pre_architecture", "post_implementation", "on_demand", "scheduled"],
+      "description": "Type of assessment performed"
+    },
+    "codebase_info": {
+      "type": "object",
+      "properties": {
+        "repository": {
+          "type": "string",
+          "description": "Repository path or URL"
+        },
+        "branch": {
+          "type": "string",
+          "description": "Branch assessed"
+        },
+        "commit": {
+          "type": "string",
+          "description": "Commit hash assessed"
+        },
+        "languages": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Primary languages in codebase"
+        },
+        "total_files": {
+          "type": "integer"
+        },
+        "total_lines": {
+          "type": "integer"
+        }
+      }
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["healthy", "acceptable", "concerning", "critical"],
+      "description": "Overall health verdict"
+    },
+    "health_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Overall health score (0-100)"
+    },
+    "categories": {
+      "type": "object",
+      "required": ["code_quality", "test_coverage", "technical_debt", "dependencies"],
+      "properties": {
+        "code_quality": {
+          "type": "object",
+          "required": ["score", "status"],
+          "properties": {
+            "score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "status": {
+              "type": "string",
+              "enum": ["healthy", "acceptable", "concerning", "critical"]
+            },
+            "metrics": {
+              "type": "object",
+              "properties": {
+                "lint_errors": {"type": "integer"},
+                "lint_warnings": {"type": "integer"},
+                "type_coverage_percent": {"type": "number"},
+                "avg_complexity": {"type": "number"},
+                "max_complexity": {"type": "number"},
+                "duplication_percent": {"type": "number"},
+                "documentation_coverage_percent": {"type": "number"}
+              }
+            },
+            "issues": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "file": {"type": "string"},
+                  "line": {"type": "integer"},
+                  "issue": {"type": "string"},
+                  "severity": {"type": "string", "enum": ["low", "medium", "high", "critical"]}
+                }
+              }
+            }
+          }
+        },
+        "test_coverage": {
+          "type": "object",
+          "required": ["score", "status"],
+          "properties": {
+            "score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "status": {
+              "type": "string",
+              "enum": ["healthy", "acceptable", "concerning", "critical"]
+            },
+            "metrics": {
+              "type": "object",
+              "properties": {
+                "overall_percent": {"type": "number"},
+                "line_coverage_percent": {"type": "number"},
+                "branch_coverage_percent": {"type": "number"},
+                "function_coverage_percent": {"type": "number"},
+                "unit_test_count": {"type": "integer"},
+                "integration_test_count": {"type": "integer"},
+                "e2e_test_count": {"type": "integer"}
+              }
+            },
+            "uncovered_critical_paths": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Critical code paths without test coverage"
+            }
+          }
+        },
+        "technical_debt": {
+          "type": "object",
+          "required": ["score", "status"],
+          "properties": {
+            "score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Higher is better (less debt)"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["healthy", "acceptable", "concerning", "critical"]
+            },
+            "debt_items": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["id", "type", "description", "priority"],
+                "properties": {
+                  "id": {"type": "string"},
+                  "type": {
+                    "type": "string",
+                    "enum": ["todo", "fixme", "hack", "deprecated", "dead_code", "circular_dependency", "hardcoded", "missing_error_handling", "other"]
+                  },
+                  "description": {"type": "string"},
+                  "file": {"type": "string"},
+                  "line": {"type": "integer"},
+                  "priority": {
+                    "type": "string",
+                    "enum": ["critical", "high", "medium", "low"]
+                  },
+                  "estimated_effort": {
+                    "type": "string",
+                    "description": "Estimated effort to resolve (e.g., '2 hours', '1 day')"
+                  },
+                  "blocks_feature": {
+                    "type": "boolean",
+                    "description": "Whether this debt blocks planned feature work"
+                  }
+                }
+              }
+            },
+            "debt_summary": {
+              "type": "object",
+              "properties": {
+                "critical_count": {"type": "integer"},
+                "high_count": {"type": "integer"},
+                "medium_count": {"type": "integer"},
+                "low_count": {"type": "integer"},
+                "total_count": {"type": "integer"}
+              }
+            }
+          }
+        },
+        "dependencies": {
+          "type": "object",
+          "required": ["score", "status"],
+          "properties": {
+            "score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "status": {
+              "type": "string",
+              "enum": ["healthy", "acceptable", "concerning", "critical"]
+            },
+            "total_dependencies": {"type": "integer"},
+            "outdated_count": {"type": "integer"},
+            "deprecated_count": {"type": "integer"},
+            "vulnerabilities": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["package", "severity"],
+                "properties": {
+                  "package": {"type": "string"},
+                  "current_version": {"type": "string"},
+                  "vulnerability_id": {"type": "string"},
+                  "severity": {
+                    "type": "string",
+                    "enum": ["low", "medium", "high", "critical"]
+                  },
+                  "description": {"type": "string"},
+                  "fix_version": {"type": "string"},
+                  "cve": {"type": "string"}
+                }
+              }
+            },
+            "vulnerability_summary": {
+              "type": "object",
+              "properties": {
+                "critical_count": {"type": "integer"},
+                "high_count": {"type": "integer"},
+                "medium_count": {"type": "integer"},
+                "low_count": {"type": "integer"}
+              }
+            },
+            "license_issues": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "package": {"type": "string"},
+                  "license": {"type": "string"},
+                  "issue": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "architecture": {
+          "type": "object",
+          "properties": {
+            "score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "status": {
+              "type": "string",
+              "enum": ["healthy", "acceptable", "concerning", "critical"]
+            },
+            "issues": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["circular_dependency", "high_coupling", "low_cohesion", "layer_violation", "god_class", "other"]
+                  },
+                  "description": {"type": "string"},
+                  "affected_modules": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                  },
+                  "severity": {
+                    "type": "string",
+                    "enum": ["low", "medium", "high"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "performance": {
+          "type": "object",
+          "properties": {
+            "score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "status": {
+              "type": "string",
+              "enum": ["healthy", "acceptable", "concerning", "critical"]
+            },
+            "metrics": {
+              "type": "object",
+              "properties": {
+                "build_time_seconds": {"type": "number"},
+                "test_time_seconds": {"type": "number"},
+                "bundle_size_kb": {"type": "number"},
+                "startup_time_ms": {"type": "number"}
+              }
+            },
+            "issues": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {"type": "string"},
+                  "description": {"type": "string"},
+                  "location": {"type": "string"}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "blocking_issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["description", "severity", "category"],
+        "properties": {
+          "description": {"type": "string"},
+          "severity": {
+            "type": "string",
+            "enum": ["high", "critical"]
+          },
+          "category": {"type": "string"},
+          "resolution": {"type": "string"},
+          "blocks_feature": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
+      "description": "Issues that should block progression"
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["recommendation", "priority", "category"],
+        "properties": {
+          "recommendation": {"type": "string"},
+          "priority": {
+            "type": "string",
+            "enum": ["low", "medium", "high", "critical"]
+          },
+          "category": {"type": "string"},
+          "effort": {"type": "string"},
+          "impact": {"type": "string"}
+        }
+      },
+      "description": "Recommended improvements"
+    },
+    "comparison": {
+      "type": "object",
+      "description": "Comparison with previous assessment (if available)",
+      "properties": {
+        "previous_assessment_date": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "health_score_change": {
+          "type": "number",
+          "description": "Change in health score (positive is improvement)"
+        },
+        "coverage_change": {
+          "type": "number"
+        },
+        "debt_count_change": {
+          "type": "integer"
+        },
+        "trend": {
+          "type": "string",
+          "enum": ["improving", "stable", "declining"]
+        },
+        "notable_changes": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "affected_modules": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Modules relevant to planned feature work (if applicable)"
+    },
+    "feature_readiness": {
+      "type": "object",
+      "description": "Assessment of readiness for planned feature (if applicable)",
+      "properties": {
+        "ready": {
+          "type": "boolean"
+        },
+        "blockers": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "risks": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "recommended_pre_work": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "tools_used": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tool": {"type": "string"},
+          "version": {"type": "string"},
+          "purpose": {"type": "string"}
+        }
+      },
+      "description": "Tools used for this assessment"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this assessment was completed"
+    }
+  }
+}

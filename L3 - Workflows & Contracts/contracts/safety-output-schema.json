@@ -1,0 +1,255 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Safety Review Report Schema",
+  "description": "Output schema for the Safety Agent's review report",
+  "type": "object",
+  "required": [
+    "workflow_id",
+    "stage_reviewed",
+    "verdict",
+    "risk_level",
+    "categories_reviewed",
+    "timestamp"
+  ],
+  "properties": {
+    "workflow_id": {
+      "type": "string",
+      "description": "Reference to the workflow being reviewed"
+    },
+    "stage_reviewed": {
+      "type": "string",
+      "enum": ["requirements", "architecture", "implementation", "deployment"],
+      "description": "Which stage was reviewed"
+    },
+    "artifacts_reviewed": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "List of artifact paths that were reviewed"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["passed", "passed_with_warnings", "needs_mitigation", "blocked"],
+      "description": "Overall safety verdict"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"],
+      "description": "Assessed risk level for the project"
+    },
+    "categories_reviewed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["category", "status"],
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "content_safety",
+              "privacy_protection",
+              "security_vulnerabilities",
+              "ai_ml_safety",
+              "misuse_prevention",
+              "vulnerable_populations"
+            ],
+            "description": "Safety category reviewed"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["passed", "warning", "concern", "critical"],
+            "description": "Status for this category"
+          },
+          "findings": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Specific findings in this category"
+          },
+          "not_applicable": {
+            "type": "boolean",
+            "description": "Whether this category doesn't apply to this project"
+          }
+        }
+      },
+      "description": "Review status for each safety category"
+    },
+    "concerns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "category", "description", "severity"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for this concern"
+          },
+          "category": {
+            "type": "string",
+            "description": "Which safety category this belongs to"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the concern"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["low", "medium", "high", "critical"],
+            "description": "Severity of the concern"
+          },
+          "affected_component": {
+            "type": "string",
+            "description": "Which component or feature is affected"
+          },
+          "potential_impact": {
+            "type": "string",
+            "description": "What could happen if not addressed"
+          },
+          "recommended_mitigation": {
+            "type": "string",
+            "description": "How to address this concern"
+          },
+          "mitigation_implemented": {
+            "type": "boolean",
+            "description": "Whether mitigation has been implemented"
+          },
+          "blocking": {
+            "type": "boolean",
+            "description": "Whether this concern blocks progression"
+          }
+        }
+      },
+      "description": "List of identified safety concerns"
+    },
+    "blocking_issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["description", "severity", "category"],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["high", "critical"]
+          },
+          "category": {
+            "type": "string"
+          },
+          "resolution_required": {
+            "type": "boolean",
+            "default": true
+          },
+          "resolution_guidance": {
+            "type": "string",
+            "description": "How to resolve this blocking issue"
+          }
+        }
+      },
+      "description": "Issues that must be resolved before proceeding"
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": {"type": "string"},
+          "category": {"type": "string"},
+          "recommendation": {"type": "string"}
+        }
+      },
+      "description": "Non-blocking warnings to be aware of"
+    },
+    "risk_factors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "factor": {
+            "type": "string",
+            "description": "Risk factor identified"
+          },
+          "present": {
+            "type": "boolean",
+            "description": "Whether this factor is present"
+          },
+          "risk_contribution": {
+            "type": "string",
+            "enum": ["low", "medium", "high"],
+            "description": "How much this factor contributes to overall risk"
+          }
+        }
+      },
+      "description": "Risk factors assessed"
+    },
+    "mitigations_required": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["concern_id", "mitigation", "stage_to_implement"],
+        "properties": {
+          "concern_id": {
+            "type": "string",
+            "description": "Reference to the concern being mitigated"
+          },
+          "mitigation": {
+            "type": "string",
+            "description": "Required mitigation action"
+          },
+          "stage_to_implement": {
+            "type": "string",
+            "enum": ["architecture", "implementation", "deployment"],
+            "description": "When this mitigation should be implemented"
+          },
+          "verification_method": {
+            "type": "string",
+            "description": "How to verify mitigation was implemented"
+          }
+        }
+      },
+      "description": "Mitigations that must be implemented"
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "recommendation": {"type": "string"},
+          "priority": {
+            "type": "string",
+            "enum": ["low", "medium", "high"]
+          },
+          "category": {"type": "string"}
+        }
+      },
+      "description": "Non-required but recommended improvements"
+    },
+    "next_review": {
+      "type": "object",
+      "properties": {
+        "stage": {
+          "type": "string",
+          "description": "When next safety review is needed"
+        },
+        "focus_areas": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "What to focus on in next review"
+        },
+        "required": {
+          "type": "boolean",
+          "description": "Whether next review is required or optional"
+        }
+      },
+      "description": "Guidance for subsequent safety reviews"
+    },
+    "reviewer_notes": {
+      "type": "string",
+      "description": "Additional notes from the safety reviewer"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this review was completed"
+    }
+  }
+}

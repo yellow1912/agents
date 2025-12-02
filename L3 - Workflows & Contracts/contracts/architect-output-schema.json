@@ -1,0 +1,260 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Architecture Handover Packet Schema",
+  "type": "object",
+  "required": [
+    "execution_mode",
+    "architecture_overview",
+    "system_components",
+    "data_models",
+    "api_specifications",
+    "technology_stack",
+    "deployment_architecture",
+    "security_and_privacy",
+    "performance_and_scalability",
+    "risk_assessment",
+    "engineering_work_breakdown"
+  ],
+  "properties": {
+    "execution_mode": {
+      "type": "string",
+      "enum": ["full_system", "fast_feature"]
+    },
+    "architecture_overview": {
+      "type": "object",
+      "required": ["description", "architecture_style", "key_decisions"],
+      "properties": {
+        "description": {"type": "string"},
+        "architecture_style": {
+          "type": "string",
+          "examples": ["microservices", "monolithic", "serverless", "hybrid"]
+        },
+        "key_decisions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["decision", "rationale"],
+            "properties": {
+              "decision": {"type": "string"},
+              "rationale": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
+    "system_components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type", "purpose", "responsibilities"],
+        "properties": {
+          "name": {"type": "string"},
+          "type": {
+            "type": "string",
+            "examples": ["frontend", "backend_api", "database", "cache", "message_queue"]
+          },
+          "purpose": {"type": "string"},
+          "responsibilities": {"type": "array", "items": {"type": "string"}},
+          "dependencies": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "data_models": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "fields"],
+        "properties": {
+          "name": {"type": "string"},
+          "description": {"type": "string"},
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name", "type"],
+              "properties": {
+                "name": {"type": "string"},
+                "type": {"type": "string"},
+                "required": {"type": "boolean"},
+                "constraints": {"type": "string"},
+                "description": {"type": "string"}
+              }
+            }
+          },
+          "relationships": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {"type": "string", "enum": ["one_to_one", "one_to_many", "many_to_many"]},
+                "target_model": {"type": "string"}
+              }
+            }
+          },
+          "indexes": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "api_specifications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["method", "path", "description"],
+        "properties": {
+          "method": {"type": "string", "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]},
+          "path": {"type": "string"},
+          "description": {"type": "string"},
+          "authentication_required": {"type": "boolean"},
+          "request_body_schema": {"type": "object"},
+          "response_schema": {"type": "object"},
+          "error_responses": {"type": "array", "items": {"type": "object"}}
+        }
+      }
+    },
+    "technology_stack": {
+      "type": "object",
+      "required": ["frontend", "backend", "database"],
+      "properties": {
+        "frontend": {
+          "type": "object",
+          "properties": {
+            "framework": {"type": "string"},
+            "language": {"type": "string"},
+            "libraries": {"type": "array", "items": {"type": "string"}},
+            "rationale": {"type": "string"}
+          }
+        },
+        "backend": {
+          "type": "object",
+          "properties": {
+            "framework": {"type": "string"},
+            "language": {"type": "string"},
+            "libraries": {"type": "array", "items": {"type": "string"}},
+            "rationale": {"type": "string"}
+          }
+        },
+        "database": {
+          "type": "object",
+          "properties": {
+            "type": {"type": "string"},
+            "name": {"type": "string"},
+            "rationale": {"type": "string"}
+          }
+        },
+        "ai_ml": {
+          "type": "object",
+          "properties": {
+            "models": {"type": "array", "items": {"type": "string"}},
+            "frameworks": {"type": "array", "items": {"type": "string"}},
+            "rationale": {"type": "string"}
+          }
+        },
+        "infrastructure": {
+          "type": "object",
+          "properties": {
+            "cloud_provider": {"type": "string"},
+            "services": {"type": "array", "items": {"type": "string"}},
+            "rationale": {"type": "string"}
+          }
+        }
+      }
+    },
+    "deployment_architecture": {
+      "type": "object",
+      "required": ["strategy", "environments"],
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": ["blue_green", "canary", "rolling", "direct"]
+        },
+        "environments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "purpose"],
+            "properties": {
+              "name": {"type": "string"},
+              "purpose": {"type": "string"},
+              "resources": {"type": "array", "items": {"type": "string"}}
+            }
+          }
+        },
+        "scaling_strategy": {"type": "string"},
+        "cdn_strategy": {"type": "string"}
+      }
+    },
+    "security_and_privacy": {
+      "type": "object",
+      "required": ["authentication", "authorization", "data_encryption"],
+      "properties": {
+        "authentication": {
+          "type": "object",
+          "required": ["strategy"],
+          "properties": {
+            "strategy": {"type": "string", "examples": ["JWT", "OAuth2", "Session"]},
+            "implementation_details": {"type": "string"}
+          }
+        },
+        "authorization": {
+          "type": "object",
+          "required": ["strategy"],
+          "properties": {
+            "strategy": {"type": "string", "examples": ["RBAC", "ABAC", "Permissions"]},
+            "implementation_details": {"type": "string"}
+          }
+        },
+        "data_encryption": {
+          "type": "object",
+          "required": ["at_rest", "in_transit"],
+          "properties": {
+            "at_rest": {"type": "string"},
+            "in_transit": {"type": "string"}
+          }
+        },
+        "secrets_management": {"type": "string"},
+        "compliance_requirements": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "performance_and_scalability": {
+      "type": "object",
+      "required": ["caching_strategy", "database_optimization"],
+      "properties": {
+        "caching_strategy": {"type": "string"},
+        "database_optimization": {
+          "type": "object",
+          "properties": {
+            "indexes": {"type": "array", "items": {"type": "string"}},
+            "query_optimization": {"type": "string"},
+            "connection_pooling": {"type": "string"}
+          }
+        },
+        "cdn_usage": {"type": "string"},
+        "load_balancing": {"type": "string"},
+        "auto_scaling": {"type": "string"}
+      }
+    },
+    "risk_assessment": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["risk", "severity", "mitigation"],
+        "properties": {
+          "risk": {"type": "string"},
+          "severity": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+          "mitigation": {"type": "string"}
+        }
+      }
+    },
+    "engineering_work_breakdown": {
+      "type": "object",
+      "required": ["frontend_tasks", "backend_tasks"],
+      "properties": {
+        "frontend_tasks": {"type": "array", "items": {"type": "string"}},
+        "backend_tasks": {"type": "array", "items": {"type": "string"}},
+        "ai_tasks": {"type": "array", "items": {"type": "string"}},
+        "devops_tasks": {"type": "array", "items": {"type": "string"}},
+        "estimated_timeline": {"type": "string"}
+      }
+    }
+  }
+}

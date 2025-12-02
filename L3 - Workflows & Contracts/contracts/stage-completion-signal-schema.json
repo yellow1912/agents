@@ -1,0 +1,151 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Stage Completion Signal Schema",
+  "description": "Signal sent by agents to notify the orchestrator that a stage is complete",
+  "type": "object",
+  "required": [
+    "agent",
+    "stage",
+    "status",
+    "timestamp"
+  ],
+  "properties": {
+    "agent": {
+      "type": "string",
+      "description": "The agent sending the completion signal",
+      "enum": [
+        "product_manager",
+        "system_architect",
+        "frontend_engineer",
+        "backend_engineer",
+        "ai_engineer",
+        "qa_engineer",
+        "devops_engineer",
+        "safety_agent",
+        "governance_agent",
+        "code_health_agent"
+      ]
+    },
+    "stage": {
+      "type": "string",
+      "description": "The stage that was completed",
+      "enum": [
+        "requirements",
+        "architecture",
+        "frontend_implementation",
+        "backend_implementation",
+        "ai_implementation",
+        "qa_testing",
+        "deployment",
+        "safety_review",
+        "governance_review",
+        "code_health_assessment"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "description": "Status of the stage completion",
+      "enum": [
+        "completed",
+        "completed_with_warnings",
+        "failed",
+        "blocked",
+        "requires_human_intervention"
+      ]
+    },
+    "output_artifacts": {
+      "type": "array",
+      "description": "List of artifacts produced by this stage",
+      "items": {
+        "type": "string",
+        "description": "Path to output artifact (JSON file)"
+      }
+    },
+    "blocking_issues": {
+      "type": "array",
+      "description": "Issues that must be resolved before proceeding",
+      "items": {
+        "type": "object",
+        "required": ["description", "severity"],
+        "properties": {
+          "description": {"type": "string"},
+          "severity": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+          "resolution_required": {"type": "boolean"}
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "description": "Non-blocking warnings or concerns",
+      "items": {"type": "string"}
+    },
+    "next_agent_required": {
+      "type": "string",
+      "description": "Which agent should be invoked next",
+      "enum": [
+        "product_manager",
+        "system_architect",
+        "frontend_engineer",
+        "backend_engineer",
+        "ai_engineer",
+        "qa_engineer",
+        "devops_engineer",
+        "safety_agent",
+        "governance_agent",
+        "code_health_agent",
+        "orchestrator",
+        "none"
+      ]
+    },
+    "parallel_agents": {
+      "type": "array",
+      "description": "Agents that can be invoked in parallel for the next stage",
+      "items": {
+        "type": "string",
+        "enum": [
+          "frontend_engineer",
+          "backend_engineer",
+          "ai_engineer"
+        ]
+      }
+    },
+    "human_approval_required": {
+      "type": "boolean",
+      "description": "Whether human approval is needed before proceeding",
+      "default": false
+    },
+    "validation_results": {
+      "type": "object",
+      "description": "Results of schema validation or other checks",
+      "properties": {
+        "schema_valid": {"type": "boolean"},
+        "validation_errors": {"type": "array", "items": {"type": "string"}},
+        "quality_checks_passed": {"type": "boolean"},
+        "quality_check_details": {"type": "object"}
+      }
+    },
+    "performance_metrics": {
+      "type": "object",
+      "description": "Performance metrics for this stage",
+      "properties": {
+        "duration_seconds": {"type": "number"},
+        "tokens_used": {"type": "number"},
+        "api_calls_made": {"type": "number"},
+        "cost_usd": {"type": "number"}
+      }
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes or context from the agent"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this signal was sent"
+    },
+    "workflow_id": {
+      "type": "string",
+      "description": "Reference to the workflow this signal belongs to"
+    }
+  }
+}
