@@ -321,8 +321,17 @@ EOF
 
 # Create .claude/CLAUDE.md (framework instructions)
 # This goes in .claude/ so it doesn't conflict with existing root CLAUDE.md
-echo "  Creating .claude/CLAUDE.md..."
 mkdir -p "$TARGET_DIR/.claude"
+
+# Check if .claude/CLAUDE.md already exists
+if [ -f "$TARGET_DIR/.claude/CLAUDE.md" ]; then
+    echo -e "  ${YELLOW}.claude/CLAUDE.md already exists${NC}"
+    echo "  Appending framework instructions..."
+    APPEND_MODE=true
+else
+    echo "  Creating .claude/CLAUDE.md..."
+    APPEND_MODE=false
+fi
 
 # Build project context section based on detection
 PROJECT_CONTEXT=""
@@ -360,8 +369,10 @@ This is an **existing project**. The framework is set to \`fast_feature\` mode b
 - Focus on incremental changes"
 fi
 
-cat > "$TARGET_DIR/.claude/CLAUDE.md" << EOF
-# $PROJECT_NAME
+# Framework content to write
+FRAMEWORK_CONTENT=$(cat << 'FRAMEWORK_EOF'
+
+---
 
 ## AI-Native Development Framework
 
@@ -369,9 +380,9 @@ This project uses the AI-Native Development Framework for structured, multi-agen
 
 ### Framework Location
 
-\`\`\`
-$FRAMEWORK_DIR
-\`\`\`
+```
+FRAMEWORK_DIR_PLACEHOLDER
+```
 
 ### How to Use
 
@@ -385,33 +396,33 @@ When working on this project, load the relevant agent specs from the framework:
 
 | Stage | Agent Spec |
 |-------|------------|
-| Requirements | \`$FRAMEWORK_DIR/L1 - Specialist Agents/product-manager.md\` |
-| Architecture | \`$FRAMEWORK_DIR/L1 - Specialist Agents/system-architect.md\` |
-| Frontend | \`$FRAMEWORK_DIR/L1 - Specialist Agents/frontend-engineer.md\` |
-| Backend | \`$FRAMEWORK_DIR/L1 - Specialist Agents/backend-engineer.md\` |
-| AI/ML | \`$FRAMEWORK_DIR/L1 - Specialist Agents/ai-engineer.md\` |
-| QA | \`$FRAMEWORK_DIR/L1 - Specialist Agents/qa-engineer.md\` |
-| DevOps | \`$FRAMEWORK_DIR/L1 - Specialist Agents/devops-engineer.md\` |
+| Requirements | `FRAMEWORK_DIR_PLACEHOLDER/L1 - Specialist Agents/product-manager.md` |
+| Architecture | `FRAMEWORK_DIR_PLACEHOLDER/L1 - Specialist Agents/system-architect.md` |
+| Frontend | `FRAMEWORK_DIR_PLACEHOLDER/L1 - Specialist Agents/frontend-engineer.md` |
+| Backend | `FRAMEWORK_DIR_PLACEHOLDER/L1 - Specialist Agents/backend-engineer.md` |
+| AI/ML | `FRAMEWORK_DIR_PLACEHOLDER/L1 - Specialist Agents/ai-engineer.md` |
+| QA | `FRAMEWORK_DIR_PLACEHOLDER/L1 - Specialist Agents/qa-engineer.md` |
+| DevOps | `FRAMEWORK_DIR_PLACEHOLDER/L1 - Specialist Agents/devops-engineer.md` |
 
 ### Orchestration
 
-- Workflow logic: \`$FRAMEWORK_DIR/L3 - Workflows & Contracts/workflows/orchestration.md\`
-- Schemas: \`$FRAMEWORK_DIR/L3 - Workflows & Contracts/contracts/\`
+- Workflow logic: `FRAMEWORK_DIR_PLACEHOLDER/L3 - Workflows & Contracts/workflows/orchestration.md`
+- Schemas: `FRAMEWORK_DIR_PLACEHOLDER/L3 - Workflows & Contracts/contracts/`
 
 ### Commands
 
 Run from project root:
 
-- \`./commands/status.sh\` - Check workflow status
-- \`./commands/next.sh\` - See what to do next
-- \`./commands/approve.sh <stage>\` - Approve a stage
-- \`./commands/validate.sh --all\` - Validate artifacts
+- `./commands/status.sh` - Check workflow status
+- `./commands/next.sh` - See what to do next
+- `./commands/approve.sh <stage>` - Approve a stage
+- `./commands/validate.sh --all` - Validate artifacts
 
 ### Artifacts
 
-All agent outputs go to \`ARTIFACTS/\`:
+All agent outputs go to `ARTIFACTS/`:
 
-\`\`\`
+```
 ARTIFACTS/
 ├── product-manager/      # Requirements
 ├── system-architect/     # Architecture
@@ -421,7 +432,23 @@ ARTIFACTS/
 ├── qa-engineer/          # Test reports
 ├── devops-engineer/      # Deployment reports
 └── system/               # Workflow state
-\`\`\`
+```
+
+FRAMEWORK_EOF
+)
+
+# Replace placeholder with actual framework directory
+FRAMEWORK_CONTENT="${FRAMEWORK_CONTENT//FRAMEWORK_DIR_PLACEHOLDER/$FRAMEWORK_DIR}"
+
+if [ "$APPEND_MODE" = true ]; then
+    # Append to existing file
+    echo "$FRAMEWORK_CONTENT" >> "$TARGET_DIR/.claude/CLAUDE.md"
+else
+    # Create new file with header
+    cat > "$TARGET_DIR/.claude/CLAUDE.md" << EOF
+# $PROJECT_NAME
+
+$FRAMEWORK_CONTENT
 
 ---
 
@@ -446,6 +473,7 @@ $PROJECT_CONTEXT
 <!-- Any other relevant information -->
 
 EOF
+fi
 
 # Initialize workflow state
 echo "  Initializing workflow state..."
