@@ -323,13 +323,26 @@ EOF
 # This goes in .claude/ so it doesn't conflict with existing root CLAUDE.md
 mkdir -p "$TARGET_DIR/.claude"
 
-# Check if .claude/CLAUDE.md already exists
+# Markers for framework section (used for updates/upgrades)
+FRAMEWORK_START_MARKER="<!-- AI-NATIVE-FRAMEWORK-START -->"
+FRAMEWORK_END_MARKER="<!-- AI-NATIVE-FRAMEWORK-END -->"
+
+# Check if .claude/CLAUDE.md already exists and if it has our framework section
 if [ -f "$TARGET_DIR/.claude/CLAUDE.md" ]; then
-    echo -e "  ${YELLOW}.claude/CLAUDE.md already exists${NC}"
-    echo "  Appending framework instructions..."
-    APPEND_MODE=true
+    if grep -q "$FRAMEWORK_START_MARKER" "$TARGET_DIR/.claude/CLAUDE.md"; then
+        echo -e "  ${YELLOW}.claude/CLAUDE.md has existing framework section${NC}"
+        echo "  Updating framework instructions..."
+        UPDATE_MODE=true
+        APPEND_MODE=false
+    else
+        echo -e "  ${YELLOW}.claude/CLAUDE.md exists without framework section${NC}"
+        echo "  Appending framework instructions..."
+        UPDATE_MODE=false
+        APPEND_MODE=true
+    fi
 else
     echo "  Creating .claude/CLAUDE.md..."
+    UPDATE_MODE=false
     APPEND_MODE=false
 fi
 
@@ -369,8 +382,9 @@ This is an **existing project**. The framework is set to \`fast_feature\` mode b
 - Focus on incremental changes"
 fi
 
-# Framework content to write
+# Framework content to write (with markers for update detection)
 FRAMEWORK_CONTENT=$(cat << 'FRAMEWORK_EOF'
+<!-- AI-NATIVE-FRAMEWORK-START -->
 
 ---
 
@@ -434,14 +448,24 @@ ARTIFACTS/
 └── system/               # Workflow state
 ```
 
+<!-- AI-NATIVE-FRAMEWORK-END -->
 FRAMEWORK_EOF
 )
 
 # Replace placeholder with actual framework directory
 FRAMEWORK_CONTENT="${FRAMEWORK_CONTENT//FRAMEWORK_DIR_PLACEHOLDER/$FRAMEWORK_DIR}"
 
-if [ "$APPEND_MODE" = true ]; then
-    # Append to existing file
+if [ "$UPDATE_MODE" = true ]; then
+    # Replace existing framework section between markers
+    # Use awk to preserve content before and after the markers
+    awk -v new_content="$FRAMEWORK_CONTENT" '
+        /<!-- AI-NATIVE-FRAMEWORK-START -->/ { skip=1; print new_content; next }
+        /<!-- AI-NATIVE-FRAMEWORK-END -->/ { skip=0; next }
+        !skip { print }
+    ' "$TARGET_DIR/.claude/CLAUDE.md" > "$TARGET_DIR/.claude/CLAUDE.md.tmp"
+    mv "$TARGET_DIR/.claude/CLAUDE.md.tmp" "$TARGET_DIR/.claude/CLAUDE.md"
+elif [ "$APPEND_MODE" = true ]; then
+    # Append to existing file (file exists but no framework section)
     echo "$FRAMEWORK_CONTENT" >> "$TARGET_DIR/.claude/CLAUDE.md"
 else
     # Create new file with header
