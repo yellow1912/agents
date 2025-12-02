@@ -161,8 +161,6 @@ Run these from your project directory:
 | `./commands/validate.sh --all` | Validate all artifacts |
 | `./commands/checkpoint.sh "msg"` | Save checkpoint for rollback |
 | `./commands/rollback.sh` | Rollback to a checkpoint |
-| `./commands/context7.sh <topic>` | Fetch latest library docs (MCP) |
-| `./commands/gemini-review.sh <artifact>` | Get second opinion (MCP) |
 | `./commands/export-handoff.sh` | Export status for pausing work |
 | `./commands/reset.sh --confirm` | Start over |
 
@@ -423,9 +421,9 @@ If your project doesn't need certain agents (e.g., no AI features), configure in
 
 ---
 
-## Recommended MCP Servers
+## Optional MCP Servers
 
-Claude Code supports MCP (Model Context Protocol) servers that enhance AI capabilities. These are optional but recommended:
+Claude Code supports MCP (Model Context Protocol) servers. If configured, Claude Code will use them automatically when helpful - no special commands needed.
 
 ### Context7 - Live Documentation
 
@@ -442,11 +440,9 @@ Fetches up-to-date library documentation, preventing hallucinated or outdated AP
 }
 ```
 
-Usage: Add "use context7" to prompts, or set up automatic rules.
-
 ### Gemini - Secondary Review
 
-Provides "four eyes" validation - a second AI perspective on architecture and implementation decisions.
+Provides "four eyes" validation - a second AI perspective on architecture decisions.
 
 ```json
 {
@@ -462,7 +458,7 @@ Provides "four eyes" validation - a second AI perspective on architecture and im
 }
 ```
 
-Add these to `~/.claude/settings.json` or your project's `.claude/settings.json`.
+Add to `~/.claude/settings.json` or your project's `.claude/settings.json`.
 
 ---
 
