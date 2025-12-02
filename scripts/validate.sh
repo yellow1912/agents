@@ -48,6 +48,9 @@ get_schema_for_artifact() {
         architecture-assessment.json)
             echo "$CONTRACTS_DIR/architecture-assessment-schema.json"
             ;;
+        architecture-snapshot.json)
+            echo "$CONTRACTS_DIR/architecture-snapshot-schema.json"
+            ;;
         frontend-implementation-report.json)
             echo "$CONTRACTS_DIR/frontend-output-schema.json"
             ;;

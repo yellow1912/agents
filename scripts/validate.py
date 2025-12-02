@@ -43,6 +43,7 @@ ARTIFACT_SCHEMA_MAP = {
     "product-requirements-packet.json": "pm-output-schema.json",
     "architecture-handover-packet.json": "architect-output-schema.json",
     "architecture-assessment.json": "architecture-assessment-schema.json",
+    "architecture-snapshot.json": "architecture-snapshot-schema.json",
     "frontend-implementation-report.json": "frontend-output-schema.json",
     "backend-implementation-report.json": "backend-output-schema.json",
     "ai-implementation-report.json": "ai-engineer-output-schema.json",
