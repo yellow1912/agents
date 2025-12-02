@@ -99,8 +99,8 @@ fi
 
 echo ""
 
-# Check if already set up
-if [ -f "$TARGET_DIR/CLAUDE.md" ] && [ -d "$TARGET_DIR/ARTIFACTS" ]; then
+# Check if already set up (look for our .claude/CLAUDE.md, not root CLAUDE.md)
+if [ -f "$TARGET_DIR/.claude/CLAUDE.md" ] && [ -d "$TARGET_DIR/ARTIFACTS" ]; then
     echo -e "${YELLOW}Warning: This project appears to already be set up.${NC}"
     read -p "Reinitialize? (y/N): " confirm
     if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
@@ -319,8 +319,10 @@ cat > "$TARGET_DIR/project-config.json" << EOF
 }
 EOF
 
-# Create CLAUDE.md
-echo "  Creating CLAUDE.md..."
+# Create .claude/CLAUDE.md (framework instructions)
+# This goes in .claude/ so it doesn't conflict with existing root CLAUDE.md
+echo "  Creating .claude/CLAUDE.md..."
+mkdir -p "$TARGET_DIR/.claude"
 
 # Build project context section based on detection
 PROJECT_CONTEXT=""
@@ -358,7 +360,7 @@ This is an **existing project**. The framework is set to \`fast_feature\` mode b
 - Focus on incremental changes"
 fi
 
-cat > "$TARGET_DIR/CLAUDE.md" << EOF
+cat > "$TARGET_DIR/.claude/CLAUDE.md" << EOF
 # $PROJECT_NAME
 
 ## AI-Native Development Framework
@@ -568,14 +570,14 @@ else
 fi
 echo ""
 echo -e "${BLUE}What was created:${NC}"
-echo "  CLAUDE.md              - Project context for Claude"
+echo "  .claude/CLAUDE.md      - Framework instructions (auto-loaded by Claude Code)"
 echo "  project-config.json    - Project configuration"
 echo "  ARTIFACTS/             - Directory for agent outputs"
 echo "  commands/              - Helper commands"
 echo ""
 echo -e "${BLUE}Next steps:${NC}"
 echo ""
-echo "  1. Review and edit CLAUDE.md to add your project context"
+echo "  1. Review and edit .claude/CLAUDE.md to add your project context"
 echo ""
 echo "  2. Review project-config.json for accuracy"
 echo ""

@@ -51,11 +51,14 @@ mkdir my-app && cd my-app
 This creates:
 ```
 my-app/
-├── CLAUDE.md              # Project context for Claude
+├── .claude/
+│   └── CLAUDE.md          # Framework instructions (auto-loaded)
 ├── project-config.json    # Your project settings
 ├── ARTIFACTS/             # Where agent outputs go
 └── commands/              # Helper commands
 ```
+
+Note: Framework instructions go in `.claude/CLAUDE.md` so they don't overwrite any existing root `CLAUDE.md` in your project.
 
 ### 2b. Set Up an Existing Project
 
