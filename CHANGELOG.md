@@ -5,6 +5,23 @@ All notable changes to the AI-Native Development Framework will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-12-03
+
+### Added
+- Smart change detection in `setup.sh` - only applies necessary changes
+- `--dry-run` flag to preview changes without applying them
+- `--force` flag to skip confirmations and overwrite all files
+- `--yes` flag to auto-confirm prompts while still showing changes
+- Change summary display showing what will be created, updated, merged, or skipped
+- Workflow-in-progress detection - preserves `workflow-state.json` when workflow has started
+- Config merging - `project-config.json` customizations are preserved on re-runs
+- Commands update detection - only updates changed command files
+
+### Changed
+- `setup.sh` now asks for confirmation before making changes (unless `--yes` or `--force`)
+- Re-running setup on an up-to-date project exits early with "Everything is up to date"
+- Better user feedback showing exactly what was changed vs preserved
+
 ## [1.1.0] - 2025-12-03
 
 ### Added
@@ -54,5 +71,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.2.0]: https://github.com/yellow1912/agents/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/yellow1912/agents/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/yellow1912/agents/releases/tag/v1.0.0

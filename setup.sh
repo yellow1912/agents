@@ -3,8 +3,12 @@
 # Usage: ./setup.sh [options] [project-name]
 #
 # Options:
-#   --analyze    Analyze existing codebase and auto-detect tech stack
-#   --help       Show this help message
+#   --analyze       Analyze existing codebase and auto-detect tech stack
+#   --deep-analyze  Deep analysis with full architecture scan
+#   --force, -f     Skip confirmations and overwrite all files
+#   --dry-run       Show what would be changed without making changes
+#   --yes, -y       Auto-confirm all prompts (still shows what will change)
+#   --help          Show this help message
 
 set -e
 
@@ -14,6 +18,7 @@ GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
+DIM='\033[2m'
 NC='\033[0m'
 
 # Get framework directory (where this script lives)
@@ -22,6 +27,9 @@ FRAMEWORK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Parse arguments
 ANALYZE=false
 DEEP_ANALYZE=false
+FORCE_MODE=false
+DRY_RUN=false
+AUTO_YES=false
 PROJECT_NAME=""
 
 while [[ $# -gt 0 ]]; do
@@ -35,12 +43,28 @@ while [[ $# -gt 0 ]]; do
             DEEP_ANALYZE=true
             shift
             ;;
+        --force|-f)
+            FORCE_MODE=true
+            AUTO_YES=true
+            shift
+            ;;
+        --dry-run)
+            DRY_RUN=true
+            shift
+            ;;
+        --yes|-y)
+            AUTO_YES=true
+            shift
+            ;;
         --help|-h)
             echo "Usage: ./setup.sh [options] [project-name]"
             echo ""
             echo "Options:"
             echo "  --analyze, -a       Analyze existing codebase and auto-detect tech stack"
             echo "  --deep-analyze, -d  Deep analysis: detect patterns, components, architecture"
+            echo "  --force, -f         Skip confirmations and overwrite all files"
+            echo "  --dry-run           Show what would be changed without making changes"
+            echo "  --yes, -y           Auto-confirm all prompts"
             echo "  --help, -h          Show this help message"
             echo ""
             echo "Examples:"
@@ -48,6 +72,8 @@ while [[ $# -gt 0 ]]; do
             echo "  ./setup.sh my-app             # New project named 'my-app'"
             echo "  ./setup.sh --analyze          # Existing project, detect stack"
             echo "  ./setup.sh --deep-analyze     # Existing project, full architecture scan"
+            echo "  ./setup.sh --dry-run          # Preview changes without applying"
+            echo "  ./setup.sh -y                 # Apply changes with auto-confirm"
             exit 0
             ;;
         *)
@@ -65,6 +91,11 @@ echo -e "${BLUE}╔════════════════════�
 echo -e "${BLUE}║   AI-Native Development Framework - Project Setup          ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
+
+if [ "$DRY_RUN" = true ]; then
+    echo -e "${YELLOW}DRY RUN MODE - No changes will be made${NC}"
+    echo ""
+fi
 
 # Check for updates (non-blocking)
 VERSION_FILE="$FRAMEWORK_DIR/VERSION"
@@ -90,6 +121,30 @@ echo -e "Framework: ${YELLOW}$FRAMEWORK_DIR${NC}"
 echo -e "Project:   ${YELLOW}$TARGET_DIR${NC}"
 echo -e "Name:      ${YELLOW}$PROJECT_NAME${NC}"
 
+# ============================================================================
+# CHANGE DETECTION - Figure out what needs to be done
+# ============================================================================
+
+# Initialize change tracking
+declare -a CHANGES_TO_MAKE=()
+declare -a CHANGES_SKIPPED=()
+WORKFLOW_IN_PROGRESS=false
+HAS_EXISTING_CONFIG=false
+
+# Check existing workflow state
+if [ -f "$TARGET_DIR/ARTIFACTS/system/workflow-state.json" ]; then
+    CURRENT_STAGE=$(grep -o '"current_stage"[[:space:]]*:[[:space:]]*"[^"]*"' "$TARGET_DIR/ARTIFACTS/system/workflow-state.json" 2>/dev/null | sed 's/.*: *"\([^"]*\)"/\1/' || echo "")
+    # Check if any stage has status other than pending
+    if grep -qE '"status"[[:space:]]*:[[:space:]]*"(in_progress|completed)"' "$TARGET_DIR/ARTIFACTS/system/workflow-state.json" 2>/dev/null; then
+        WORKFLOW_IN_PROGRESS=true
+    fi
+fi
+
+# Check existing project config
+if [ -f "$TARGET_DIR/project-config.json" ]; then
+    HAS_EXISTING_CONFIG=true
+fi
+
 # Auto-detect if this looks like an existing project
 if [ "$ANALYZE" = false ]; then
     if [ -f "$TARGET_DIR/package.json" ] || [ -f "$TARGET_DIR/requirements.txt" ] || \
@@ -98,26 +153,19 @@ if [ "$ANALYZE" = false ]; then
        [ -d "$TARGET_DIR/src" ] || [ -d "$TARGET_DIR/app" ]; then
         echo ""
         echo -e "${YELLOW}Existing project detected.${NC}"
-        read -p "Analyze codebase to auto-detect tech stack? (Y/n): " do_analyze
-        if [ "$do_analyze" != "n" ] && [ "$do_analyze" != "N" ]; then
+        if [ "$AUTO_YES" = false ]; then
+            read -p "Analyze codebase to auto-detect tech stack? (Y/n): " do_analyze
+            if [ "$do_analyze" != "n" ] && [ "$do_analyze" != "N" ]; then
+                ANALYZE=true
+            fi
+        else
             ANALYZE=true
+            echo "Auto-analyzing codebase..."
         fi
     fi
 fi
 
 echo ""
-
-# Check if already set up (look for our .claude/CLAUDE.md, not root CLAUDE.md)
-if [ -f "$TARGET_DIR/.claude/CLAUDE.md" ] && [ -d "$TARGET_DIR/ARTIFACTS" ]; then
-    echo -e "${YELLOW}Warning: This project appears to already be set up.${NC}"
-    read -p "Reinitialize? (y/N): " confirm
-    if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
-        echo "Setup cancelled."
-        exit 0
-    fi
-fi
-
-echo "Setting up project..."
 
 # ============================================================================
 # ANALYZE EXISTING PROJECT (if --analyze)
@@ -133,7 +181,6 @@ EXISTING_CODEBASE=false
 EXECUTION_MODE="full_system"
 
 if [ "$ANALYZE" = true ]; then
-    echo ""
     echo -e "${CYAN}Analyzing project structure...${NC}"
     EXISTING_CODEBASE=true
     EXECUTION_MODE="fast_feature"
@@ -280,23 +327,219 @@ if [ "$ANALYZE" = true ]; then
 fi
 
 # ============================================================================
-# CREATE PROJECT FILES
+# DETERMINE WHAT CHANGES ARE NEEDED
 # ============================================================================
 
-# Create ARTIFACTS directory structure
-echo "  Creating ARTIFACTS directories..."
-mkdir -p "$TARGET_DIR/ARTIFACTS"/{product-manager,system-architect,frontend-engineer,backend-engineer,ai-engineer,qa-engineer,devops-engineer,system}
+echo -e "${CYAN}Analyzing what needs to be done...${NC}"
+echo ""
 
-# ============================================================================
-# DEEP ANALYSIS (if --deep-analyze)
-# ============================================================================
+# --- ARTIFACTS directories ---
+ARTIFACTS_DIRS=(
+    "ARTIFACTS/product-manager"
+    "ARTIFACTS/system-architect"
+    "ARTIFACTS/frontend-engineer"
+    "ARTIFACTS/backend-engineer"
+    "ARTIFACTS/ai-engineer"
+    "ARTIFACTS/qa-engineer"
+    "ARTIFACTS/devops-engineer"
+    "ARTIFACTS/system"
+)
 
+ARTIFACTS_NEEDED=false
+for dir in "${ARTIFACTS_DIRS[@]}"; do
+    if [ ! -d "$TARGET_DIR/$dir" ]; then
+        ARTIFACTS_NEEDED=true
+        break
+    fi
+done
+
+if [ "$ARTIFACTS_NEEDED" = true ]; then
+    CHANGES_TO_MAKE+=("CREATE: ARTIFACTS/ directory structure")
+else
+    CHANGES_SKIPPED+=("ARTIFACTS/ directories (already exist)")
+fi
+
+# --- Commands directory ---
+COMMANDS_NEEDED=false
+COMMANDS_OUTDATED=()
+
+if [ ! -d "$TARGET_DIR/commands" ]; then
+    COMMANDS_NEEDED=true
+    CHANGES_TO_MAKE+=("CREATE: commands/ directory with helper scripts")
+else
+    # Check if commands need updating by comparing checksums
+    for cmd in "$FRAMEWORK_DIR/commands/"*.sh; do
+        if [ -f "$cmd" ]; then
+            cmd_name=$(basename "$cmd")
+            target_cmd="$TARGET_DIR/commands/$cmd_name"
+            if [ -f "$target_cmd" ]; then
+                # Compare files
+                if ! diff -q "$cmd" "$target_cmd" > /dev/null 2>&1; then
+                    COMMANDS_OUTDATED+=("$cmd_name")
+                fi
+            else
+                COMMANDS_OUTDATED+=("$cmd_name (new)")
+            fi
+        fi
+    done
+
+    if [ ${#COMMANDS_OUTDATED[@]} -gt 0 ]; then
+        CHANGES_TO_MAKE+=("UPDATE: commands/ (${#COMMANDS_OUTDATED[@]} files: ${COMMANDS_OUTDATED[*]})")
+    else
+        CHANGES_SKIPPED+=("commands/ (already up to date)")
+    fi
+fi
+
+# --- .claude/CLAUDE.md ---
+FRAMEWORK_START_MARKER="<!-- AI-NATIVE-FRAMEWORK-START -->"
+FRAMEWORK_END_MARKER="<!-- AI-NATIVE-FRAMEWORK-END -->"
+CLAUDE_MD_ACTION=""
+
+if [ -f "$TARGET_DIR/.claude/CLAUDE.md" ]; then
+    if grep -q "$FRAMEWORK_START_MARKER" "$TARGET_DIR/.claude/CLAUDE.md"; then
+        # Check if framework section needs updating
+        # Extract current framework path from the file
+        CURRENT_FW_PATH=$(grep -o 'Framework Location.*FRAMEWORK_DIR_PLACEHOLDER\|/[^`]*' "$TARGET_DIR/.claude/CLAUDE.md" 2>/dev/null | head -1 || echo "")
+        # For now, we'll just offer to update if framework dir might have changed
+        CLAUDE_MD_ACTION="UPDATE"
+        CHANGES_TO_MAKE+=("UPDATE: .claude/CLAUDE.md (refresh framework section)")
+    else
+        CLAUDE_MD_ACTION="APPEND"
+        CHANGES_TO_MAKE+=("APPEND: .claude/CLAUDE.md (add framework section)")
+    fi
+else
+    CLAUDE_MD_ACTION="CREATE"
+    CHANGES_TO_MAKE+=("CREATE: .claude/CLAUDE.md (framework instructions)")
+fi
+
+# --- project-config.json ---
+if [ "$HAS_EXISTING_CONFIG" = true ]; then
+    # We'll merge detected values into existing config
+    if [ "$ANALYZE" = true ]; then
+        CHANGES_TO_MAKE+=("MERGE: project-config.json (update detected tech stack, preserve customizations)")
+    else
+        CHANGES_SKIPPED+=("project-config.json (already exists, use --analyze to update tech stack)")
+    fi
+else
+    CHANGES_TO_MAKE+=("CREATE: project-config.json")
+fi
+
+# --- workflow-state.json ---
+if [ -f "$TARGET_DIR/ARTIFACTS/system/workflow-state.json" ]; then
+    if [ "$WORKFLOW_IN_PROGRESS" = true ]; then
+        CHANGES_SKIPPED+=("workflow-state.json (workflow in progress at stage: $CURRENT_STAGE)")
+        echo -e "${YELLOW}⚠ Workflow in progress - workflow-state.json will be preserved${NC}"
+    else
+        if [ "$FORCE_MODE" = true ]; then
+            CHANGES_TO_MAKE+=("RESET: workflow-state.json (--force mode)")
+        else
+            CHANGES_SKIPPED+=("workflow-state.json (exists, stages are pending)")
+        fi
+    fi
+else
+    CHANGES_TO_MAKE+=("CREATE: workflow-state.json")
+fi
+
+# --- Deep analysis files ---
 if [ "$DEEP_ANALYZE" = true ]; then
-    echo -e "${CYAN}Preparing deep architecture analysis...${NC}"
+    if [ -f "$TARGET_DIR/ARTIFACTS/system/architecture-snapshot.json" ]; then
+        # Check status
+        ARCH_STATUS=$(grep -o '"status"[[:space:]]*:[[:space:]]*"[^"]*"' "$TARGET_DIR/ARTIFACTS/system/architecture-snapshot.json" 2>/dev/null | sed 's/.*: *"\([^"]*\)"/\1/' || echo "")
+        if [ "$ARCH_STATUS" = "completed" ]; then
+            CHANGES_SKIPPED+=("architecture-snapshot.json (analysis already completed)")
+        else
+            CHANGES_TO_MAKE+=("UPDATE: architecture-snapshot.json (reset for re-analysis)")
+        fi
+    else
+        CHANGES_TO_MAKE+=("CREATE: architecture-snapshot.json (pending deep analysis)")
+        CHANGES_TO_MAKE+=("CREATE: deep-analysis-prompt.md")
+    fi
+fi
+
+# --- Git initialization ---
+if ! git rev-parse --git-dir > /dev/null 2>&1; then
+    CHANGES_TO_MAKE+=("INIT: git repository (needed for checkpoints)")
+fi
+
+# ============================================================================
+# SHOW CHANGE SUMMARY AND ASK FOR CONFIRMATION
+# ============================================================================
+
+echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+echo -e "${BLUE}                    CHANGE SUMMARY                              ${NC}"
+echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+echo ""
+
+if [ ${#CHANGES_TO_MAKE[@]} -eq 0 ]; then
+    echo -e "${GREEN}✓ Everything is already up to date!${NC}"
+    echo ""
+    if [ ${#CHANGES_SKIPPED[@]} -gt 0 ]; then
+        echo -e "${DIM}Skipped (already current):${NC}"
+        for skip in "${CHANGES_SKIPPED[@]}"; do
+            echo -e "  ${DIM}• $skip${NC}"
+        done
+    fi
+    echo ""
+    exit 0
+fi
+
+echo -e "${YELLOW}Changes to be made:${NC}"
+for change in "${CHANGES_TO_MAKE[@]}"; do
+    echo -e "  ${GREEN}➤${NC} $change"
+done
+
+echo ""
+
+if [ ${#CHANGES_SKIPPED[@]} -gt 0 ]; then
+    echo -e "${DIM}Skipped (no changes needed):${NC}"
+    for skip in "${CHANGES_SKIPPED[@]}"; do
+        echo -e "  ${DIM}• $skip${NC}"
+    done
+    echo ""
+fi
+
+# Check for potential issues
+if [ "$WORKFLOW_IN_PROGRESS" = true ] && [ "$FORCE_MODE" = true ]; then
+    echo -e "${RED}⚠ WARNING: --force will reset workflow-state.json even though workflow is in progress!${NC}"
+    echo ""
+fi
+
+# Ask for confirmation (unless --yes or --force)
+if [ "$DRY_RUN" = true ]; then
+    echo -e "${YELLOW}DRY RUN - No changes made.${NC}"
+    exit 0
+fi
+
+if [ "$AUTO_YES" = false ]; then
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+    read -p "Proceed with these changes? (Y/n): " confirm
+    if [ "$confirm" = "n" ] || [ "$confirm" = "N" ]; then
+        echo "Setup cancelled."
+        exit 0
+    fi
+fi
+
+echo ""
+echo -e "${CYAN}Applying changes...${NC}"
+echo ""
+
+# ============================================================================
+# APPLY CHANGES
+# ============================================================================
+
+# Create ARTIFACTS directories
+if [ "$ARTIFACTS_NEEDED" = true ]; then
+    echo "  Creating ARTIFACTS directories..."
+    mkdir -p "$TARGET_DIR/ARTIFACTS"/{product-manager,system-architect,frontend-engineer,backend-engineer,ai-engineer,qa-engineer,devops-engineer,system}
+fi
+
+# Deep analysis files (before commands, in case we need to reference them)
+if [ "$DEEP_ANALYZE" = true ]; then
     DEEP_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-    # Create pending architecture snapshot
-    cat > "$TARGET_DIR/ARTIFACTS/system/architecture-snapshot.json" << EOF
+    if [ ! -f "$TARGET_DIR/ARTIFACTS/system/architecture-snapshot.json" ] || [ "$FORCE_MODE" = true ]; then
+        echo "  Creating architecture-snapshot.json..."
+        cat > "$TARGET_DIR/ARTIFACTS/system/architecture-snapshot.json" << EOF
 {
   "project_name": "$PROJECT_NAME",
   "captured_at": "$DEEP_TIMESTAMP",
@@ -322,9 +565,11 @@ if [ "$DEEP_ANALYZE" = true ]; then
   "notes": ["Pending deep analysis - run Claude Code to complete"]
 }
 EOF
+    fi
 
-    # Create analysis prompt for Claude Code
-    cat > "$TARGET_DIR/ARTIFACTS/system/deep-analysis-prompt.md" << 'EOF'
+    if [ ! -f "$TARGET_DIR/ARTIFACTS/system/deep-analysis-prompt.md" ]; then
+        echo "  Creating deep-analysis-prompt.md..."
+        cat > "$TARGET_DIR/ARTIFACTS/system/deep-analysis-prompt.md" << 'EOF'
 # Deep Architecture Analysis Required
 
 A deep analysis of this codebase was requested. Please analyze the project and update:
@@ -371,23 +616,94 @@ Set `status` to `"completed"` when done.
 
 **Important**: Do NOT modify any existing project files. Only update files in ARTIFACTS/.
 EOF
-
-    echo -e "  Created: ${YELLOW}ARTIFACTS/system/architecture-snapshot.json${NC} (pending)"
-    echo -e "  Created: ${YELLOW}ARTIFACTS/system/deep-analysis-prompt.md${NC}"
-    echo ""
-    echo -e "${YELLOW}Deep analysis will run when you start Claude Code.${NC}"
-    echo ""
+    fi
 fi
 
-# Create commands directory and copy commands
-echo "  Setting up commands..."
-mkdir -p "$TARGET_DIR/commands"
-cp "$FRAMEWORK_DIR/commands/"*.sh "$TARGET_DIR/commands/" 2>/dev/null || true
-chmod +x "$TARGET_DIR/commands/"*.sh 2>/dev/null || true
+# Commands directory
+if [ "$COMMANDS_NEEDED" = true ] || [ ${#COMMANDS_OUTDATED[@]} -gt 0 ]; then
+    echo "  Setting up commands..."
+    mkdir -p "$TARGET_DIR/commands"
+    cp "$FRAMEWORK_DIR/commands/"*.sh "$TARGET_DIR/commands/" 2>/dev/null || true
+    chmod +x "$TARGET_DIR/commands/"*.sh 2>/dev/null || true
+fi
 
-# Create project-config.json
-echo "  Creating project-config.json..."
-cat > "$TARGET_DIR/project-config.json" << EOF
+# project-config.json
+if [ "$HAS_EXISTING_CONFIG" = true ] && [ "$ANALYZE" = true ]; then
+    echo "  Merging project-config.json (preserving customizations)..."
+    # Read existing config and merge with detected values
+    # We'll use a simple approach: only update null/empty tech_stack values
+
+    TEMP_CONFIG=$(mktemp)
+
+    # Use Python for JSON merging if available, otherwise use jq, otherwise just inform user
+    if command -v python3 &> /dev/null; then
+        python3 << PYEOF
+import json
+import sys
+
+try:
+    with open("$TARGET_DIR/project-config.json", "r") as f:
+        config = json.load(f)
+except:
+    config = {}
+
+# Only update tech_stack values if they're null or empty
+if "tech_stack" not in config:
+    config["tech_stack"] = {}
+
+detected = {
+    "frontend": "${DETECTED_FRONTEND}" or None,
+    "backend": "${DETECTED_BACKEND}" or None,
+    "database": "${DETECTED_DATABASE}" or None,
+    "ai_ml": "${DETECTED_AI}" or None,
+    "infrastructure": "${DETECTED_INFRA}" or None
+}
+
+for key, value in detected.items():
+    if value and (key not in config["tech_stack"] or not config["tech_stack"][key]):
+        config["tech_stack"][key] = value
+
+# Update framework path
+config["framework_path"] = "$FRAMEWORK_DIR"
+
+# Update existing_codebase flag
+if "existing_codebase" not in config:
+    config["existing_codebase"] = {}
+config["existing_codebase"]["has_existing_code"] = True
+config["existing_codebase"]["has_existing_architecture"] = True
+
+with open("$TEMP_CONFIG", "w") as f:
+    json.dump(config, f, indent=2)
+
+PYEOF
+        mv "$TEMP_CONFIG" "$TARGET_DIR/project-config.json"
+    elif command -v jq &> /dev/null; then
+        # jq-based merge (simplified)
+        jq --arg fw "${DETECTED_FRONTEND}" \
+           --arg be "${DETECTED_BACKEND}" \
+           --arg db "${DETECTED_DATABASE}" \
+           --arg ai "${DETECTED_AI}" \
+           --arg infra "${DETECTED_INFRA}" \
+           --arg fwpath "$FRAMEWORK_DIR" \
+           '.tech_stack.frontend = (if .tech_stack.frontend == null and $fw != "" then $fw else .tech_stack.frontend end) |
+            .tech_stack.backend = (if .tech_stack.backend == null and $be != "" then $be else .tech_stack.backend end) |
+            .tech_stack.database = (if .tech_stack.database == null and $db != "" then $db else .tech_stack.database end) |
+            .tech_stack.ai_ml = (if .tech_stack.ai_ml == null and $ai != "" then $ai else .tech_stack.ai_ml end) |
+            .tech_stack.infrastructure = (if .tech_stack.infrastructure == null and $infra != "" then $infra else .tech_stack.infrastructure end) |
+            .framework_path = $fwpath |
+            .existing_codebase.has_existing_code = true |
+            .existing_codebase.has_existing_architecture = true' \
+           "$TARGET_DIR/project-config.json" > "$TEMP_CONFIG" && mv "$TEMP_CONFIG" "$TARGET_DIR/project-config.json"
+    else
+        echo -e "    ${YELLOW}Note: Install python3 or jq for automatic config merging${NC}"
+        echo "    Detected values (update project-config.json manually):"
+        [ -n "$DETECTED_FRONTEND" ] && echo "      frontend: $DETECTED_FRONTEND"
+        [ -n "$DETECTED_BACKEND" ] && echo "      backend: $DETECTED_BACKEND"
+        [ -n "$DETECTED_DATABASE" ] && echo "      database: $DETECTED_DATABASE"
+    fi
+elif [ "$HAS_EXISTING_CONFIG" = false ]; then
+    echo "  Creating project-config.json..."
+    cat > "$TARGET_DIR/project-config.json" << EOF
 {
   "project_name": "$PROJECT_NAME",
   "project_type": "full_stack_web_app",
@@ -418,33 +734,10 @@ cat > "$TARGET_DIR/project-config.json" << EOF
   "framework_path": "$FRAMEWORK_DIR"
 }
 EOF
-
-# Create .claude/CLAUDE.md (framework instructions)
-# This goes in .claude/ so it doesn't conflict with existing root CLAUDE.md
-mkdir -p "$TARGET_DIR/.claude"
-
-# Markers for framework section (used for updates/upgrades)
-FRAMEWORK_START_MARKER="<!-- AI-NATIVE-FRAMEWORK-START -->"
-FRAMEWORK_END_MARKER="<!-- AI-NATIVE-FRAMEWORK-END -->"
-
-# Check if .claude/CLAUDE.md already exists and if it has our framework section
-if [ -f "$TARGET_DIR/.claude/CLAUDE.md" ]; then
-    if grep -q "$FRAMEWORK_START_MARKER" "$TARGET_DIR/.claude/CLAUDE.md"; then
-        echo -e "  ${YELLOW}.claude/CLAUDE.md has existing framework section${NC}"
-        echo "  Updating framework instructions..."
-        UPDATE_MODE=true
-        APPEND_MODE=false
-    else
-        echo -e "  ${YELLOW}.claude/CLAUDE.md exists without framework section${NC}"
-        echo "  Appending framework instructions..."
-        UPDATE_MODE=false
-        APPEND_MODE=true
-    fi
-else
-    echo "  Creating .claude/CLAUDE.md..."
-    UPDATE_MODE=false
-    APPEND_MODE=false
 fi
+
+# .claude/CLAUDE.md
+mkdir -p "$TARGET_DIR/.claude"
 
 # Build project context section based on detection
 PROJECT_CONTEXT=""
@@ -555,20 +848,20 @@ FRAMEWORK_EOF
 # Replace placeholder with actual framework directory
 FRAMEWORK_CONTENT="${FRAMEWORK_CONTENT//FRAMEWORK_DIR_PLACEHOLDER/$FRAMEWORK_DIR}"
 
-if [ "$UPDATE_MODE" = true ]; then
+if [ "$CLAUDE_MD_ACTION" = "UPDATE" ]; then
+    echo "  Updating .claude/CLAUDE.md..."
     # Replace existing framework section between markers
-    # Use awk to preserve content before and after the markers
     awk -v new_content="$FRAMEWORK_CONTENT" '
         /<!-- AI-NATIVE-FRAMEWORK-START -->/ { skip=1; print new_content; next }
         /<!-- AI-NATIVE-FRAMEWORK-END -->/ { skip=0; next }
         !skip { print }
     ' "$TARGET_DIR/.claude/CLAUDE.md" > "$TARGET_DIR/.claude/CLAUDE.md.tmp"
     mv "$TARGET_DIR/.claude/CLAUDE.md.tmp" "$TARGET_DIR/.claude/CLAUDE.md"
-elif [ "$APPEND_MODE" = true ]; then
-    # Append to existing file (file exists but no framework section)
+elif [ "$CLAUDE_MD_ACTION" = "APPEND" ]; then
+    echo "  Appending to .claude/CLAUDE.md..."
     echo "$FRAMEWORK_CONTENT" >> "$TARGET_DIR/.claude/CLAUDE.md"
 else
-    # Create new file with header
+    echo "  Creating .claude/CLAUDE.md..."
     cat > "$TARGET_DIR/.claude/CLAUDE.md" << EOF
 # $PROJECT_NAME
 
@@ -599,12 +892,24 @@ $PROJECT_CONTEXT
 EOF
 fi
 
-# Initialize workflow state
-echo "  Initializing workflow state..."
-TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-WORKFLOW_ID="wf-$(date +%s)-$$"
+# workflow-state.json
+SHOULD_CREATE_WORKFLOW=false
+if [ ! -f "$TARGET_DIR/ARTIFACTS/system/workflow-state.json" ]; then
+    SHOULD_CREATE_WORKFLOW=true
+elif [ "$FORCE_MODE" = true ] && [ "$WORKFLOW_IN_PROGRESS" = false ]; then
+    SHOULD_CREATE_WORKFLOW=true
+elif [ "$FORCE_MODE" = true ] && [ "$WORKFLOW_IN_PROGRESS" = true ]; then
+    # Even with --force, warn about in-progress workflow
+    echo -e "  ${YELLOW}Resetting workflow-state.json (--force mode)...${NC}"
+    SHOULD_CREATE_WORKFLOW=true
+fi
 
-cat > "$TARGET_DIR/ARTIFACTS/system/workflow-state.json" << EOF
+if [ "$SHOULD_CREATE_WORKFLOW" = true ]; then
+    echo "  Creating workflow-state.json..."
+    TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    WORKFLOW_ID="wf-$(date +%s)-$$"
+
+    cat > "$TARGET_DIR/ARTIFACTS/system/workflow-state.json" << EOF
 {
   "workflow_id": "$WORKFLOW_ID",
   "product_name": "$PROJECT_NAME",
@@ -682,6 +987,7 @@ cat > "$TARGET_DIR/ARTIFACTS/system/workflow-state.json" << EOF
   "updated_at": "$TIMESTAMP"
 }
 EOF
+fi
 
 # Initialize git if not already a repo (needed for checkpoints)
 if ! git rev-parse --git-dir > /dev/null 2>&1; then
@@ -692,10 +998,7 @@ else
     GIT_INITIALIZED=false
 fi
 
-# Note: We intentionally track ARTIFACTS/ in git so checkpoints can capture
-# the full project state (requirements, architecture decisions, etc.)
-# Only add framework-specific ignores if needed
-echo "  Checking .gitignore..."
+# Check .gitignore
 if [ ! -f "$TARGET_DIR/.gitignore" ]; then
     touch "$TARGET_DIR/.gitignore"
 fi
@@ -712,44 +1015,40 @@ fi
 # ============================================================================
 
 echo ""
-echo -e "${GREEN}✓ Project setup complete!${NC}"
+echo -e "${GREEN}✓ Setup complete!${NC}"
 echo ""
-echo -e "Project initialized: ${YELLOW}$PROJECT_NAME${NC}"
+echo -e "Project: ${YELLOW}$PROJECT_NAME${NC}"
 if [ "$EXISTING_CODEBASE" = true ]; then
-    echo -e "Mode: ${YELLOW}fast_feature${NC} (existing codebase detected)"
+    echo -e "Mode: ${YELLOW}fast_feature${NC} (existing codebase)"
 else
     echo -e "Mode: ${YELLOW}full_system${NC} (new project)"
 fi
+
 echo ""
-echo -e "${BLUE}What was created:${NC}"
-echo "  .claude/CLAUDE.md      - Framework instructions (auto-loaded by Claude Code)"
-echo "  project-config.json    - Project configuration"
-echo "  ARTIFACTS/             - Directory for agent outputs"
-echo "  commands/              - Helper commands"
-if [ "$DEEP_ANALYZE" = true ]; then
+echo -e "${BLUE}Changes applied:${NC}"
+for change in "${CHANGES_TO_MAKE[@]}"; do
+    echo -e "  ${GREEN}✓${NC} $change"
+done
+
+if [ ${#CHANGES_SKIPPED[@]} -gt 0 ]; then
     echo ""
-    echo -e "${BLUE}Deep analysis files:${NC}"
-    echo "  ARTIFACTS/system/architecture-snapshot.json  - Architecture (pending)"
-    echo "  ARTIFACTS/system/deep-analysis-prompt.md     - Analysis instructions"
+    echo -e "${DIM}Preserved (no changes):${NC}"
+    for skip in "${CHANGES_SKIPPED[@]}"; do
+        echo -e "  ${DIM}• $skip${NC}"
+    done
 fi
+
 echo ""
 echo -e "${BLUE}Next steps:${NC}"
 echo ""
 if [ "$DEEP_ANALYZE" = true ]; then
     echo "  1. Open Claude Code - it will see the deep analysis prompt"
-    echo ""
     echo "  2. Claude will analyze your codebase and fill in architecture-snapshot.json"
-    echo ""
     echo "  3. Then describe what you want to build"
 else
-    echo "  1. Review and edit .claude/CLAUDE.md to add your project context"
-    echo ""
-    echo "  2. Review project-config.json for accuracy"
-    echo ""
-    echo "  3. Open Claude Code and describe what you want to build:"
-    echo -e "     ${YELLOW}claude${NC}"
+    echo "  1. Review .claude/CLAUDE.md for accuracy"
+    echo "  2. Open Claude Code and describe what you want to build"
 fi
 echo ""
-echo "  Check status anytime:"
-echo -e "     ${YELLOW}./commands/status.sh${NC}"
+echo "  Check status: ${YELLOW}./commands/status.sh${NC}"
 echo ""
