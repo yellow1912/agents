@@ -680,7 +680,7 @@ settings["hooks"]["SessionStart"] = [
         "hooks": [
             {
                 "type": "command",
-                "command": f"{hooks_path}/session-start.sh"
+                "command": '"$CLAUDE_PROJECT_DIR"/.claude/hooks/session-start.sh'
             }
         ]
     }
@@ -695,7 +695,7 @@ PYEOF
 else
     # Create new settings.json with hooks
     echo "  Creating .claude/settings.json with hooks..."
-    cat > "$TARGET_DIR/.claude/settings.json" << EOF
+    cat > "$TARGET_DIR/.claude/settings.json" << 'EOF'
 {
   "hooks": {
     "SessionStart": [
@@ -703,7 +703,7 @@ else
         "hooks": [
           {
             "type": "command",
-            "command": "$TARGET_DIR/.claude/hooks/session-start.sh"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-start.sh"
           }
         ]
       }
