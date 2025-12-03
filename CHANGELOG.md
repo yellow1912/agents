@@ -5,6 +5,20 @@ All notable changes to the AI-Native Development Framework will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-12-03
+
+### Added
+- **SessionStart hook** - Automatically shows workflow status when Claude Code starts
+- Hooks directory with `session-start.sh` for context injection
+- `.claude/settings.json` auto-configuration with hook setup
+- More directive CLAUDE.md template with explicit workflow instructions
+
+### Changed
+- CLAUDE.md template now uses "REQUIRED" language with step-by-step instructions
+- Framework instructions include `@` file references for agent specs
+- Setup installs hooks to `.claude/hooks/` and configures `settings.json`
+- `install.sh` and `update.sh` now handle hooks directory
+
 ## [1.2.0] - 2025-12-03
 
 ### Added
@@ -71,6 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.3.0]: https://github.com/yellow1912/agents/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/yellow1912/agents/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/yellow1912/agents/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/yellow1912/agents/releases/tag/v1.0.0

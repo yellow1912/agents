@@ -390,6 +390,26 @@ else
     fi
 fi
 
+# --- Hooks ---
+HOOKS_NEEDED=false
+if [ ! -d "$TARGET_DIR/.claude/hooks" ]; then
+    HOOKS_NEEDED=true
+    CHANGES_TO_MAKE+=("CREATE: .claude/hooks/ (session start hook)")
+elif [ ! -f "$TARGET_DIR/.claude/hooks/session-start.sh" ]; then
+    HOOKS_NEEDED=true
+    CHANGES_TO_MAKE+=("CREATE: .claude/hooks/session-start.sh")
+else
+    # Check if hook needs updating
+    if [ -f "$FRAMEWORK_DIR/hooks/session-start.sh" ]; then
+        if ! diff -q "$FRAMEWORK_DIR/hooks/session-start.sh" "$TARGET_DIR/.claude/hooks/session-start.sh" > /dev/null 2>&1; then
+            HOOKS_NEEDED=true
+            CHANGES_TO_MAKE+=("UPDATE: .claude/hooks/session-start.sh")
+        else
+            CHANGES_SKIPPED+=(".claude/hooks/ (already up to date)")
+        fi
+    fi
+fi
+
 # --- .claude/CLAUDE.md ---
 FRAMEWORK_START_MARKER="<!-- AI-NATIVE-FRAMEWORK-START -->"
 FRAMEWORK_END_MARKER="<!-- AI-NATIVE-FRAMEWORK-END -->"
@@ -627,6 +647,72 @@ if [ "$COMMANDS_NEEDED" = true ] || [ ${#COMMANDS_OUTDATED[@]} -gt 0 ]; then
     chmod +x "$TARGET_DIR/commands/"*.sh 2>/dev/null || true
 fi
 
+# Hooks directory
+echo "  Setting up hooks..."
+mkdir -p "$TARGET_DIR/.claude/hooks"
+cp "$FRAMEWORK_DIR/hooks/"*.sh "$TARGET_DIR/.claude/hooks/" 2>/dev/null || true
+chmod +x "$TARGET_DIR/.claude/hooks/"*.sh 2>/dev/null || true
+
+# Configure hooks in settings.json (merge with existing if present)
+if [ -f "$TARGET_DIR/.claude/settings.json" ]; then
+    # Check if hooks already configured
+    if ! grep -q '"SessionStart"' "$TARGET_DIR/.claude/settings.json" 2>/dev/null; then
+        echo "  Adding hooks to existing settings.json..."
+        # Use python to merge JSON if available
+        if command -v python3 &> /dev/null; then
+            python3 << PYEOF
+import json
+
+settings_path = "$TARGET_DIR/.claude/settings.json"
+hooks_path = "$TARGET_DIR/.claude/hooks"
+
+try:
+    with open(settings_path, "r") as f:
+        settings = json.load(f)
+except:
+    settings = {}
+
+if "hooks" not in settings:
+    settings["hooks"] = {}
+
+settings["hooks"]["SessionStart"] = [
+    {
+        "hooks": [
+            {
+                "type": "command",
+                "command": f"{hooks_path}/session-start.sh"
+            }
+        ]
+    }
+]
+
+with open(settings_path, "w") as f:
+    json.dump(settings, f, indent=2)
+
+PYEOF
+        fi
+    fi
+else
+    # Create new settings.json with hooks
+    echo "  Creating .claude/settings.json with hooks..."
+    cat > "$TARGET_DIR/.claude/settings.json" << EOF
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$TARGET_DIR/.claude/hooks/session-start.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+EOF
+fi
+
 # project-config.json
 if [ "$HAS_EXISTING_CONFIG" = true ] && [ "$ANALYZE" = true ]; then
     echo "  Merging project-config.json (preserving customizations)..."
@@ -791,54 +877,56 @@ This project uses the AI-Native Development Framework for structured, multi-agen
 FRAMEWORK_DIR_PLACEHOLDER
 ```
 
-### How to Use
+---
 
-1. **Describe what you want to build** - Start with your idea or problem statement
-2. **Follow the agent workflow** - Each agent will guide you through their stage
-3. **Approve at gates** - You'll be asked to approve requirements, architecture, and deployment
+## REQUIRED: Follow This Workflow
 
-### Agent Specifications
+When the user describes a **feature, task, or problem to solve**, you MUST follow this workflow:
 
-When working on this project, load the relevant agent specs from the framework:
+### Step 1: Check Current Stage
+Run `./commands/status.sh` or read `ARTIFACTS/system/workflow-state.json` to see the current stage.
 
-| Stage | Agent Spec |
+### Step 2: Follow the Current Stage's Agent
+
+| Stage | What To Do |
 |-------|------------|
-| Requirements | `FRAMEWORK_DIR_PLACEHOLDER/L1 - Specialist Agents/product-manager.md` |
-| Architecture | `FRAMEWORK_DIR_PLACEHOLDER/L1 - Specialist Agents/system-architect.md` |
-| Frontend | `FRAMEWORK_DIR_PLACEHOLDER/L1 - Specialist Agents/frontend-engineer.md` |
-| Backend | `FRAMEWORK_DIR_PLACEHOLDER/L1 - Specialist Agents/backend-engineer.md` |
-| AI/ML | `FRAMEWORK_DIR_PLACEHOLDER/L1 - Specialist Agents/ai-engineer.md` |
-| QA | `FRAMEWORK_DIR_PLACEHOLDER/L1 - Specialist Agents/qa-engineer.md` |
-| DevOps | `FRAMEWORK_DIR_PLACEHOLDER/L1 - Specialist Agents/devops-engineer.md` |
+| **requirements** | Read `@FRAMEWORK_DIR_PLACEHOLDER/L1 - Specialist Agents/product-manager.md` and create `ARTIFACTS/product-manager/requirements.json` |
+| **architecture** | Read `@FRAMEWORK_DIR_PLACEHOLDER/L1 - Specialist Agents/system-architect.md` and create `ARTIFACTS/system-architect/architecture.json` |
+| **frontend_implementation** | Read `@FRAMEWORK_DIR_PLACEHOLDER/L1 - Specialist Agents/frontend-engineer.md` |
+| **backend_implementation** | Read `@FRAMEWORK_DIR_PLACEHOLDER/L1 - Specialist Agents/backend-engineer.md` |
+| **ai_implementation** | Read `@FRAMEWORK_DIR_PLACEHOLDER/L1 - Specialist Agents/ai-engineer.md` |
+| **qa_testing** | Read `@FRAMEWORK_DIR_PLACEHOLDER/L1 - Specialist Agents/qa-engineer.md` |
+| **deployment** | Read `@FRAMEWORK_DIR_PLACEHOLDER/L1 - Specialist Agents/devops-engineer.md` |
 
-### Orchestration
+### Step 3: Save Artifacts
+- Save all outputs to the appropriate `ARTIFACTS/<agent>/` folder
+- Use JSON format matching schemas in `FRAMEWORK_DIR_PLACEHOLDER/L3 - Workflows & Contracts/contracts/`
 
-- Workflow logic: `FRAMEWORK_DIR_PLACEHOLDER/L3 - Workflows & Contracts/workflows/orchestration.md`
-- Schemas: `FRAMEWORK_DIR_PLACEHOLDER/L3 - Workflows & Contracts/contracts/`
+### Step 4: Ask for Approval
+At gate stages (requirements, architecture, deployment), ask the user to approve before proceeding:
+> "Requirements are ready. Please review ARTIFACTS/product-manager/requirements.json and run `./commands/approve.sh requirements` to proceed."
+
+---
 
 ### Commands
-
-Run from project root:
 
 - `./commands/status.sh` - Check workflow status
 - `./commands/next.sh` - See what to do next
 - `./commands/approve.sh <stage>` - Approve a stage
 - `./commands/validate.sh --all` - Validate artifacts
 
-### Artifacts
-
-All agent outputs go to `ARTIFACTS/`:
+### Artifacts Structure
 
 ```
 ARTIFACTS/
-├── product-manager/      # Requirements
-├── system-architect/     # Architecture
+├── product-manager/      # Requirements (requirements.json)
+├── system-architect/     # Architecture (architecture.json)
 ├── frontend-engineer/    # Frontend implementation
 ├── backend-engineer/     # Backend implementation
 ├── ai-engineer/          # AI implementation
 ├── qa-engineer/          # Test reports
 ├── devops-engineer/      # Deployment reports
-└── system/               # Workflow state
+└── system/               # Workflow state (workflow-state.json)
 ```
 
 <!-- AI-NATIVE-FRAMEWORK-END -->

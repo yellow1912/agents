@@ -234,17 +234,23 @@ cp -r "$SCRIPT_DIR/scripts" "$TARGET/"
 echo "  Copying commands..."
 cp -r "$SCRIPT_DIR/commands" "$TARGET/"
 
+echo "  Copying hooks..."
+cp -r "$SCRIPT_DIR/hooks" "$TARGET/"
+
 echo "  Copying setup.sh..."
 cp "$SCRIPT_DIR/setup.sh" "$TARGET/"
 
-# Copy README if exists
+# Copy README, CHANGELOG, VERSION if exists
 [ -f "$SCRIPT_DIR/README.md" ] && cp "$SCRIPT_DIR/README.md" "$TARGET/"
+[ -f "$SCRIPT_DIR/CHANGELOG.md" ] && cp "$SCRIPT_DIR/CHANGELOG.md" "$TARGET/"
+[ -f "$SCRIPT_DIR/VERSION" ] && cp "$SCRIPT_DIR/VERSION" "$TARGET/"
 
 # Make scripts executable
 chmod +x "$TARGET/setup.sh"
 chmod +x "$TARGET/scripts/"*.sh 2>/dev/null || true
 chmod +x "$TARGET/scripts/"*.py 2>/dev/null || true
 chmod +x "$TARGET/commands/"*.sh 2>/dev/null || true
+chmod +x "$TARGET/hooks/"*.sh 2>/dev/null || true
 
 echo ""
 echo -e "${GREEN}✓ Installation complete!${NC}"

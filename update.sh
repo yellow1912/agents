@@ -241,6 +241,7 @@ rm -rf "$FRAMEWORK_DIR/L2 - Orchestration & Governance"
 rm -rf "$FRAMEWORK_DIR/L3 - Workflows & Contracts"
 rm -rf "$FRAMEWORK_DIR/scripts"
 rm -rf "$FRAMEWORK_DIR/commands"
+rm -rf "$FRAMEWORK_DIR/hooks"
 
 cp -r "$EXTRACTED_DIR/L0 - Meta Layer" "$FRAMEWORK_DIR/"
 cp -r "$EXTRACTED_DIR/L1 - Specialist Agents" "$FRAMEWORK_DIR/"
@@ -248,6 +249,7 @@ cp -r "$EXTRACTED_DIR/L2 - Orchestration & Governance" "$FRAMEWORK_DIR/"
 cp -r "$EXTRACTED_DIR/L3 - Workflows & Contracts" "$FRAMEWORK_DIR/"
 cp -r "$EXTRACTED_DIR/scripts" "$FRAMEWORK_DIR/"
 cp -r "$EXTRACTED_DIR/commands" "$FRAMEWORK_DIR/"
+cp -r "$EXTRACTED_DIR/hooks" "$FRAMEWORK_DIR/"
 
 # Update root files
 cp "$EXTRACTED_DIR/setup.sh" "$FRAMEWORK_DIR/"
@@ -255,6 +257,7 @@ cp "$EXTRACTED_DIR/install.sh" "$FRAMEWORK_DIR/"
 cp "$EXTRACTED_DIR/update.sh" "$FRAMEWORK_DIR/"
 cp "$EXTRACTED_DIR/VERSION" "$FRAMEWORK_DIR/"
 [ -f "$EXTRACTED_DIR/README.md" ] && cp "$EXTRACTED_DIR/README.md" "$FRAMEWORK_DIR/"
+[ -f "$EXTRACTED_DIR/CHANGELOG.md" ] && cp "$EXTRACTED_DIR/CHANGELOG.md" "$FRAMEWORK_DIR/"
 
 # Make executable
 chmod +x "$FRAMEWORK_DIR/setup.sh"
@@ -263,6 +266,7 @@ chmod +x "$FRAMEWORK_DIR/update.sh"
 chmod +x "$FRAMEWORK_DIR/scripts/"*.sh 2>/dev/null || true
 chmod +x "$FRAMEWORK_DIR/scripts/"*.py 2>/dev/null || true
 chmod +x "$FRAMEWORK_DIR/commands/"*.sh 2>/dev/null || true
+chmod +x "$FRAMEWORK_DIR/hooks/"*.sh 2>/dev/null || true
 
 NEW_VERSION=$(get_local_version)
 
