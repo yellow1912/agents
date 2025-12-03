@@ -653,6 +653,11 @@ mkdir -p "$TARGET_DIR/.claude/hooks"
 cp "$FRAMEWORK_DIR/hooks/"*.sh "$TARGET_DIR/.claude/hooks/" 2>/dev/null || true
 chmod +x "$TARGET_DIR/.claude/hooks/"*.sh 2>/dev/null || true
 
+# Slash commands
+echo "  Setting up slash commands..."
+mkdir -p "$TARGET_DIR/.claude/commands"
+cp "$FRAMEWORK_DIR/slash-commands/"*.md "$TARGET_DIR/.claude/commands/" 2>/dev/null || true
+
 # Configure hooks in settings.json (merge with existing if present)
 if [ -f "$TARGET_DIR/.claude/settings.json" ]; then
     # Check if hooks already configured

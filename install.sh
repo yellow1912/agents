@@ -237,6 +237,9 @@ cp -r "$SCRIPT_DIR/commands" "$TARGET/"
 echo "  Copying hooks..."
 cp -r "$SCRIPT_DIR/hooks" "$TARGET/"
 
+echo "  Copying slash-commands..."
+cp -r "$SCRIPT_DIR/slash-commands" "$TARGET/"
+
 echo "  Copying setup.sh..."
 cp "$SCRIPT_DIR/setup.sh" "$TARGET/"
 

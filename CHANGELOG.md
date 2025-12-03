@@ -12,12 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Hooks directory with `session-start.sh` for context injection
 - `.claude/settings.json` auto-configuration with hook setup
 - More directive CLAUDE.md template with explicit workflow instructions
+- **Slash commands** - `/status`, `/next`, `/approve`, `/validate` for quick workflow control
 
 ### Changed
 - CLAUDE.md template now uses "REQUIRED" language with step-by-step instructions
 - Framework instructions include `@` file references for agent specs
 - Setup installs hooks to `.claude/hooks/` and configures `settings.json`
-- `install.sh` and `update.sh` now handle hooks directory
+- Setup installs slash commands to `.claude/commands/`
+- `install.sh` and `update.sh` now handle hooks and slash-commands directories
 
 ## [1.2.0] - 2025-12-03
 

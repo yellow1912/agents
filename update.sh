@@ -242,6 +242,7 @@ rm -rf "$FRAMEWORK_DIR/L3 - Workflows & Contracts"
 rm -rf "$FRAMEWORK_DIR/scripts"
 rm -rf "$FRAMEWORK_DIR/commands"
 rm -rf "$FRAMEWORK_DIR/hooks"
+rm -rf "$FRAMEWORK_DIR/slash-commands"
 
 cp -r "$EXTRACTED_DIR/L0 - Meta Layer" "$FRAMEWORK_DIR/"
 cp -r "$EXTRACTED_DIR/L1 - Specialist Agents" "$FRAMEWORK_DIR/"
@@ -250,6 +251,7 @@ cp -r "$EXTRACTED_DIR/L3 - Workflows & Contracts" "$FRAMEWORK_DIR/"
 cp -r "$EXTRACTED_DIR/scripts" "$FRAMEWORK_DIR/"
 cp -r "$EXTRACTED_DIR/commands" "$FRAMEWORK_DIR/"
 cp -r "$EXTRACTED_DIR/hooks" "$FRAMEWORK_DIR/"
+cp -r "$EXTRACTED_DIR/slash-commands" "$FRAMEWORK_DIR/"
 
 # Update root files
 cp "$EXTRACTED_DIR/setup.sh" "$FRAMEWORK_DIR/"
